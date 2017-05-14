@@ -14,7 +14,7 @@ The main character is a nomad in the desert, looking for a new home. He must dod
 ### How Automaton is Applied
 
 
-![](http://i.imgur.com/56FFIIE.png "Logo Title Text 1")
+![](http://i.imgur.com/56FFIIE.png?1 "Logo Title Text 1")
 
 There will be four states present, represented as the walking state, the jumping state, the up-in-the-air state, and then the dead state. The user input will affect the nomad’s next state.
 
