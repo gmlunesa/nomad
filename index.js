@@ -90,14 +90,14 @@
     /** @const */
     var IS_HIDPI = window.devicePixelRatio > 1;
 
-    /** @const */
-    var IS_IOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
+    // /** @const */
+    // var IS_IOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
 
-    /** @const */
-    var IS_MOBILE = /Android/.test(window.navigator.userAgent) || IS_IOS;
+    // /** @const */
+    // var IS_MOBILE = /Android/.test(window.navigator.userAgent) || IS_IOS;
 
-    /** @const */
-    var IS_TOUCH_ENABLED = 'ontouchstart' in window;
+    // /** @const */
+    // var IS_TOUCH_ENABLED = 'ontouchstart' in window;
 
     /**
      * Default game configuration.
@@ -160,24 +160,24 @@
      */
     Nomad.spriteCoordinates = {
         LDPI: {
-            CACTUS_LARGE: { x: 332, y: 2 },
-            CACTUS_SMALL: { x: 228, y: 2 },
+            OBSTACLE_LARGE: { x: 332, y: 2 },
+            OBSTACLE_SMALL: { x: 228, y: 2 },
             CLOUD: { x: 86, y: 2 },
             HORIZON: { x: 2, y: 54 },
-            MOON: { x: 484, y: 2 },
-            PTERODACTYL: { x: 134, y: 2 },
+            // MOON: { x: 484, y: 2 },
+            BIRD: { x: 134, y: 2 },
             RESTART: { x: 2, y: 2 },
             TEXT_SPRITE: { x: 655, y: 2 },
             BOY: { x: 848, y: 2 },
             STAR: { x: 645, y: 2 }
         },
         HDPI: {
-            CACTUS_LARGE: { x: 652, y: 2 },
-            CACTUS_SMALL: { x: 446, y: 2 },
+            OBSTACLE_LARGE: { x: 652, y: 2 },
+            OBSTACLE_SMALL: { x: 446, y: 2 },
             CLOUD: { x: 166, y: 2 },
             HORIZON: { x: 2, y: 104 },
-            MOON: { x: 954, y: 2 },
-            PTERODACTYL: { x: 260, y: 2 },
+            // MOON: { x: 954, y: 2 },
+            BIRD: { x: 260, y: 2 },
             RESTART: { x: 2, y: 2 },
             TEXT_SPRITE: { x: 1294, y: 2 },
             BOY: { x: 1678, y: 2 },
@@ -287,10 +287,10 @@
          * definition.
          */
         loadImg: function () {
-           /* if (IS_HIDPI) {
+            if (IS_HIDPI) {
                 Nomad.imageSprite = document.getElementById('offline-resources-2x');
                 this.spriteDef = Nomad.spriteCoordinates.HDPI;
-            } else */{
+            } else {
                 Nomad.imageSprite = document.getElementById('offline-resources-1x');
                 this.spriteDef = Nomad.spriteCoordinates.LDPI;
             }
@@ -308,7 +308,7 @@
          * Load and decode base 64 encoded sounds.
          */
         loadAudio: function () {
-            if (!IS_IOS) {
+           
                 this.audioContext = new AudioContext();
 
                 var resourceTemplate =
@@ -325,7 +325,7 @@
                         this.soundFx[index] = audioData;
                     }.bind(this, sound));
                 }
-            }
+       
         },
 
         /**
@@ -388,8 +388,8 @@
             this.startListeners();
             this.update();
 
-            window.addEventListener(Nomad.events.RESIZE,
-                this.debounceResize.bind(this));
+            // window.addEventListener(Nomad.events.RESIZE,
+            //     this.debounceResize.bind(this));
         },
 
 
@@ -628,16 +628,16 @@
             document.addEventListener(Nomad.events.KEYDOWN, this);
             document.addEventListener(Nomad.events.KEYUP, this);
 
-            if (IS_MOBILE) {
-                // Mobile only touch devices.
-                this.touchController.addEventListener(Nomad.events.TOUCHSTART, this);
-                this.touchController.addEventListener(Nomad.events.TOUCHEND, this);
-                this.containerEl.addEventListener(Nomad.events.TOUCHSTART, this);
-            } else {
+            // if (IS_MOBILE) {
+            //     // Mobile only touch devices.
+            //     this.touchController.addEventListener(Nomad.events.TOUCHSTART, this);
+            //     this.touchController.addEventListener(Nomad.events.TOUCHEND, this);
+            //     this.containerEl.addEventListener(Nomad.events.TOUCHSTART, this);
+            // } else {
                 // Mouse.
                 document.addEventListener(Nomad.events.MOUSEDOWN, this);
                 document.addEventListener(Nomad.events.MOUSEUP, this);
-            }
+            // }
         },
 
         /**
@@ -647,14 +647,14 @@
             document.removeEventListener(Nomad.events.KEYDOWN, this);
             document.removeEventListener(Nomad.events.KEYUP, this);
 
-            if (IS_MOBILE) {
-                this.touchController.removeEventListener(Nomad.events.TOUCHSTART, this);
-                this.touchController.removeEventListener(Nomad.events.TOUCHEND, this);
-                this.containerEl.removeEventListener(Nomad.events.TOUCHSTART, this);
-            } else {
+            // if (IS_MOBILE) {
+            //     this.touchController.removeEventListener(Nomad.events.TOUCHSTART, this);
+            //     this.touchController.removeEventListener(Nomad.events.TOUCHEND, this);
+            //     this.containerEl.removeEventListener(Nomad.events.TOUCHSTART, this);
+            // } else {
                 document.removeEventListener(Nomad.events.MOUSEDOWN, this);
                 document.removeEventListener(Nomad.events.MOUSEUP, this);
-            }
+            // }
         },
 
         /**
@@ -663,9 +663,9 @@
          */
         onDownPress: function (e) {
             // Prevent native page scrolling whilst tapping on mobile.
-            if (IS_MOBILE && this.playing) {
-                e.preventDefault();
-            }
+            // if (IS_MOBILE && this.playing) {
+            //     e.preventDefault();
+            // }
 
             if (e.target != this.detailsButton) {
                 if (!this.crashed && (Nomad.keyActions.JUMP[e.keyCode] ||
@@ -986,7 +986,7 @@
      * @return {number}
      */
     function getCurrTime() {
-        return IS_IOS ? new Date().getTime() : performance.now();
+        return performance.now();
     }
 
 
@@ -1104,7 +1104,7 @@
 
         // Adjustments are made to the bounding box as there is a 1 pixel white
         // border around the t-rex and Blocks.
-        var tRexBox = new HitBox(
+        var rBoyBox = new HitBox(
             boy.xPos + 1,
             boy.yPos + 1,
             boy.values.WIDTH - 2,
@@ -1118,32 +1118,32 @@
 
         // Debug outer box
         if (opt_canvasCtx) {
-            drawHitBox(opt_canvasCtx, tRexBox, BlockBox);
+            drawHitBox(opt_canvasCtx, rBoyBox, BlockBox);
         }
 
         // Simple outer bounds check.
-        if (boxCompare(tRexBox, BlockBox)) {
+        if (boxCompare(rBoyBox, BlockBox)) {
             var collisionBoxes = Block.collisionBoxes;
-            var tRexCollisionBoxes = boy.ducking ?
+            var rBoyCollisionBoxes = boy.ducking ?
                 Boy.collisionBoxes.DUCKING : Boy.collisionBoxes.RUNNING;
 
             // Detailed axis aligned box check.
-            for (var t = 0; t < tRexCollisionBoxes.length; t++) {
+            for (var t = 0; t < rBoyCollisionBoxes.length; t++) {
                 for (var i = 0; i < collisionBoxes.length; i++) {
                     // Adjust the box to actual positions.
-                    var adjTrexBox =
-                        adjustHitBox(tRexCollisionBoxes[t], tRexBox);
+                    var adj_BoyBox =
+                        adjustHitBox(rBoyCollisionBoxes[t], rBoyBox);
                     var adjBlockBox =
                         adjustHitBox(collisionBoxes[i], BlockBox);
-                    var crashed = boxCompare(adjTrexBox, adjBlockBox);
+                    var crashed = boxCompare(adj_BoyBox, adjBlockBox);
 
                     // Draw boxes for debug.
                     if (opt_canvasCtx) {
-                        drawHitBox(opt_canvasCtx, adjTrexBox, adjBlockBox);
+                        drawHitBox(opt_canvasCtx, adj_BoyBox, adjBlockBox);
                     }
 
                     if (crashed) {
-                        return [adjTrexBox, adjBlockBox];
+                        return [adj_BoyBox, adjBlockBox];
                     }
                 }
             }
@@ -1170,10 +1170,10 @@
     /**
      * Draw the collision boxes for debug.
      */
-    function drawHitBox(canvasCtx, tRexBox, BlockBox) {
+    function drawHitBox(canvasCtx, rBoyBox, BlockBox) {
         canvasCtx.save();
         canvasCtx.strokeStyle = '#f00';
-        canvasCtx.strokeRect(tRexBox.x, tRexBox.y, tRexBox.width, tRexBox.height);
+        canvasCtx.strokeRect(rBoyBox.x, rBoyBox.y, rBoyBox.width, rBoyBox.height);
 
         canvasCtx.strokeStyle = '#0f0';
         canvasCtx.strokeRect(BlockBox.x, BlockBox.y,
@@ -1184,23 +1184,23 @@
 
     /**
      * Compare two collision boxes for a collision.
-     * @param {CollisionBox} tRexBox
+     * @param {CollisionBox} rBoyBox
      * @param {CollisionBox} BlockBox
      * @return {boolean} Whether the boxes intersected.
      */
-    function boxCompare(tRexBox, BlockBox) {
+    function boxCompare(rBoyBox, BlockBox) {
         var crashed = false;
-        var tRexBoxX = tRexBox.x;
-        var tRexBoxY = tRexBox.y;
+        var rBoyBoxX = rBoyBox.x;
+        var rBoyBoxY = rBoyBox.y;
 
         var BlockBoxX = BlockBox.x;
         var BlockBoxY = BlockBox.y;
 
         // Axis-Aligned Bounding Box method.
-        if (tRexBox.x < BlockBoxX + BlockBox.width &&
-            tRexBox.x + tRexBox.width > BlockBoxX &&
-            tRexBox.y < BlockBox.y + BlockBox.height &&
-            tRexBox.height + tRexBox.y > BlockBox.y) {
+        if (rBoyBox.x < BlockBoxX + BlockBox.width &&
+            rBoyBox.x + rBoyBox.width > BlockBoxX &&
+            rBoyBox.y < BlockBox.y + BlockBox.height &&
+            rBoyBox.height + rBoyBox.y > BlockBox.y) {
             crashed = true;
         }
 
@@ -1291,8 +1291,8 @@
 
                 // Check if Block can be positioned at various heights.
                 if (Array.isArray(this.typeConfig.yPos)) {
-                    var yPosConfig = IS_MOBILE ? this.typeConfig.yPosMobile :
-                        this.typeConfig.yPos;
+                    // var yPosConfig = IS_MOBILE ? this.typeConfig.yPosMobile :
+                    var yPosConfig = this.typeConfig.yPos;
                     this.yPos = yPosConfig[randomNumGen(0, yPosConfig.length - 1)];
                 } else {
                     this.yPos = this.typeConfig.yPos;
@@ -1428,7 +1428,7 @@
      */
     Block.types = [
         {
-            type: 'CACTUS_SMALL',
+            type: 'OBSTACLE_SMALL',
             width: 17,
             height: 35,
             yPos: 105,
@@ -1442,7 +1442,7 @@
             ]
         },
         {
-            type: 'CACTUS_LARGE',
+            type: 'OBSTACLE_LARGE',
             width: 25,
             height: 50,
             yPos: 90,
@@ -1456,7 +1456,7 @@
             ]
         },
         {
-            type: 'PTERODACTYL',
+            type: 'BIRD',
             width: 46,
             height: 40,
             yPos: [100, 75, 50], // Variable height.
@@ -2204,155 +2204,155 @@
     /**
      * Nightmode shows a moon and stars on the horizon.
      */
-    function DarkMode(canvas, spritePos, containerWidth) {
-        this.spritePos = spritePos;
-        this.canvas = canvas;
-        this.canvasCtx = canvas.getContext('2d');
-        this.xPos = containerWidth - 50;
-        this.yPos = 30;
-        this.currentPhase = 0;
-        this.opacity = 0;
-        this.containerWidth = containerWidth;
-        this.stars = [];
-        this.drawStars = false;
-        this.placeStars();
-    };
+    // function DarkMode(canvas, spritePos, containerWidth) {
+    //     this.spritePos = spritePos;
+    //     this.canvas = canvas;
+    //     this.canvasCtx = canvas.getContext('2d');
+    //     this.xPos = containerWidth - 50;
+    //     this.yPos = 30;
+    //     this.currentPhase = 0;
+    //     this.opacity = 0;
+    //     this.containerWidth = containerWidth;
+    //     this.stars = [];
+    //     this.drawStars = false;
+    //     this.placeStars();
+    // };
 
-    /**
-     * @enum {number}
-     */
-    DarkMode.values = {
-        FADE_SPEED: 0.035,
-        HEIGHT: 40,
-        MOON_SPEED: 0.25,
-        NUM_STARS: 2,
-        STAR_SIZE: 9,
-        STAR_SPEED: 0.3,
-        STAR_MAX_Y: 70,
-        WIDTH: 20
-    };
+    // /**
+    //  * @enum {number}
+    //  */
+    // DarkMode.values = {
+    //     FADE_SPEED: 0.035,
+    //     HEIGHT: 40,
+    //     MOON_SPEED: 0.25,
+    //     NUM_STARS: 2,
+    //     STAR_SIZE: 9,
+    //     STAR_SPEED: 0.3,
+    //     STAR_MAX_Y: 70,
+    //     WIDTH: 20
+    // };
 
-    DarkMode.phases = [140, 120, 100, 60, 40, 20, 0];
+    // DarkMode.phases = [140, 120, 100, 60, 40, 20, 0];
 
-    DarkMode.prototype = {
-        /**
-         * Update moving moon, changing phases.
-         * @param {boolean} activated Whether night mode is activated.
-         * @param {number} delta
-         */
-        update: function (activated, delta) {
-            // Moon phase.
-            if (activated && this.opacity == 0) {
-                this.currentPhase++;
+    // DarkMode.prototype = {
+    //     /**
+    //      * Update moving moon, changing phases.
+    //      * @param {boolean} activated Whether night mode is activated.
+    //      * @param {number} delta
+    //      */
+    //     update: function (activated, delta) {
+    //         // Moon phase.
+    //         if (activated && this.opacity == 0) {
+    //             this.currentPhase++;
 
-                if (this.currentPhase >= DarkMode.phases.length) {
-                    this.currentPhase = 0;
-                }
-            }
+    //             if (this.currentPhase >= DarkMode.phases.length) {
+    //                 this.currentPhase = 0;
+    //             }
+    //         }
 
-            // Fade in / out.
-            if (activated && (this.opacity < 1 || this.opacity == 0)) {
-                this.opacity += DarkMode.values.FADE_SPEED;
-            } else if (this.opacity > 0) {
-                this.opacity -= DarkMode.values.FADE_SPEED;
-            }
+    //         // Fade in / out.
+    //         if (activated && (this.opacity < 1 || this.opacity == 0)) {
+    //             this.opacity += DarkMode.values.FADE_SPEED;
+    //         } else if (this.opacity > 0) {
+    //             this.opacity -= DarkMode.values.FADE_SPEED;
+    //         }
 
-            // Set moon positioning.
-            if (this.opacity > 0) {
-                this.xPos = this.updateX(this.xPos, DarkMode.values.MOON_SPEED);
+    //         // Set moon positioning.
+    //         if (this.opacity > 0) {
+    //             this.xPos = this.updateX(this.xPos, DarkMode.values.MOON_SPEED);
 
-                // Update stars.
-                if (this.drawStars) {
-                    for (var i = 0; i < DarkMode.values.NUM_STARS; i++) {
-                        this.stars[i].x = this.updateX(this.stars[i].x,
-                            DarkMode.values.STAR_SPEED);
-                    }
-                }
-                this.draw();
-            } else {
-                this.opacity = 0;
-                this.placeStars();
-            }
-            this.drawStars = true;
-        },
+    //             // Update stars.
+    //             if (this.drawStars) {
+    //                 for (var i = 0; i < DarkMode.values.NUM_STARS; i++) {
+    //                     this.stars[i].x = this.updateX(this.stars[i].x,
+    //                         DarkMode.values.STAR_SPEED);
+    //                 }
+    //             }
+    //             this.draw();
+    //         } else {
+    //             this.opacity = 0;
+    //             this.placeStars();
+    //         }
+    //         this.drawStars = true;
+    //     },
 
-        updateX: function (currentPos, speed) {
-            if (currentPos < -DarkMode.values.WIDTH) {
-                currentPos = this.containerWidth;
-            } else {
-                currentPos -= speed;
-            }
-            return currentPos;
-        },
+    //     updateX: function (currentPos, speed) {
+    //         if (currentPos < -DarkMode.values.WIDTH) {
+    //             currentPos = this.containerWidth;
+    //         } else {
+    //             currentPos -= speed;
+    //         }
+    //         return currentPos;
+    //     },
 
-        draw: function () {
-            var moonSourceWidth = this.currentPhase == 3 ? DarkMode.values.WIDTH * 2 :
-                DarkMode.values.WIDTH;
-            var moonSourceHeight = DarkMode.values.HEIGHT;
-            var moonSourceX = this.spritePos.x + DarkMode.phases[this.currentPhase];
-            var moonOutputWidth = moonSourceWidth;
-            var starSize = DarkMode.values.STAR_SIZE;
-            var starSourceX = Nomad.spriteCoordinates.LDPI.STAR.x;
+    //     draw: function () {
+    //         var moonSourceWidth = this.currentPhase == 3 ? DarkMode.values.WIDTH * 2 :
+    //             DarkMode.values.WIDTH;
+    //         var moonSourceHeight = DarkMode.values.HEIGHT;
+    //         var moonSourceX = this.spritePos.x + DarkMode.phases[this.currentPhase];
+    //         var moonOutputWidth = moonSourceWidth;
+    //         var starSize = DarkMode.values.STAR_SIZE;
+    //         var starSourceX = Nomad.spriteCoordinates.LDPI.STAR.x;
 
-            if (IS_HIDPI) {
-                moonSourceWidth *= 2;
-                moonSourceHeight *= 2;
-                moonSourceX = this.spritePos.x +
-                    (DarkMode.phases[this.currentPhase] * 2);
-                starSize *= 2;
-                starSourceX = Nomad.spriteCoordinates.HDPI.STAR.x;
-            }
+    //         if (IS_HIDPI) {
+    //             moonSourceWidth *= 2;
+    //             moonSourceHeight *= 2;
+    //             moonSourceX = this.spritePos.x +
+    //                 (DarkMode.phases[this.currentPhase] * 2);
+    //             starSize *= 2;
+    //             starSourceX = Nomad.spriteCoordinates.HDPI.STAR.x;
+    //         }
 
-            this.canvasCtx.save();
-            this.canvasCtx.globalAlpha = this.opacity;
+    //         this.canvasCtx.save();
+    //         this.canvasCtx.globalAlpha = this.opacity;
 
-            // Stars.
-            if (this.drawStars) {
-                for (var i = 0; i < DarkMode.values.NUM_STARS; i++) {
-                    this.canvasCtx.drawImage(Nomad.imageSprite,
-                        starSourceX, this.stars[i].sourceY, starSize, starSize,
-                        Math.round(this.stars[i].x), this.stars[i].y,
-                        DarkMode.values.STAR_SIZE, DarkMode.values.STAR_SIZE);
-                }
-            }
+    //         // Stars.
+    //         if (this.drawStars) {
+    //             for (var i = 0; i < DarkMode.values.NUM_STARS; i++) {
+    //                 this.canvasCtx.drawImage(Nomad.imageSprite,
+    //                     starSourceX, this.stars[i].sourceY, starSize, starSize,
+    //                     Math.round(this.stars[i].x), this.stars[i].y,
+    //                     DarkMode.values.STAR_SIZE, DarkMode.values.STAR_SIZE);
+    //             }
+    //         }
 
-            // Moon.
-            this.canvasCtx.drawImage(Nomad.imageSprite, moonSourceX,
-                this.spritePos.y, moonSourceWidth, moonSourceHeight,
-                Math.round(this.xPos), this.yPos,
-                moonOutputWidth, DarkMode.values.HEIGHT);
+    //         // Moon.
+    //         this.canvasCtx.drawImage(Nomad.imageSprite, moonSourceX,
+    //             this.spritePos.y, moonSourceWidth, moonSourceHeight,
+    //             Math.round(this.xPos), this.yPos,
+    //             moonOutputWidth, DarkMode.values.HEIGHT);
 
-            this.canvasCtx.globalAlpha = 1;
-            this.canvasCtx.restore();
-        },
+    //         this.canvasCtx.globalAlpha = 1;
+    //         this.canvasCtx.restore();
+    //     },
 
-        // Do star placement.
-        placeStars: function () {
-            var segmentSize = Math.round(this.containerWidth /
-                DarkMode.values.NUM_STARS);
+    //     // Do star placement.
+    //     placeStars: function () {
+    //         var segmentSize = Math.round(this.containerWidth /
+    //             DarkMode.values.NUM_STARS);
 
-            for (var i = 0; i < DarkMode.values.NUM_STARS; i++) {
-                this.stars[i] = {};
-                this.stars[i].x = randomNumGen(segmentSize * i, segmentSize * (i + 1));
-                this.stars[i].y = randomNumGen(0, DarkMode.values.STAR_MAX_Y);
+    //         for (var i = 0; i < DarkMode.values.NUM_STARS; i++) {
+    //             this.stars[i] = {};
+    //             this.stars[i].x = randomNumGen(segmentSize * i, segmentSize * (i + 1));
+    //             this.stars[i].y = randomNumGen(0, DarkMode.values.STAR_MAX_Y);
 
-                if (IS_HIDPI) {
-                    this.stars[i].sourceY = Nomad.spriteCoordinates.HDPI.STAR.y +
-                        DarkMode.values.STAR_SIZE * 2 * i;
-                } else {
-                    this.stars[i].sourceY = Nomad.spriteCoordinates.LDPI.STAR.y +
-                        DarkMode.values.STAR_SIZE * i;
-                }
-            }
-        },
+    //             if (IS_HIDPI) {
+    //                 this.stars[i].sourceY = Nomad.spriteCoordinates.HDPI.STAR.y +
+    //                     DarkMode.values.STAR_SIZE * 2 * i;
+    //             } else {
+    //                 this.stars[i].sourceY = Nomad.spriteCoordinates.LDPI.STAR.y +
+    //                     DarkMode.values.STAR_SIZE * i;
+    //             }
+    //         }
+    //     },
 
-        reset: function () {
-            this.currentPhase = 0;
-            this.opacity = 0;
-            this.update(false);
-        }
+    //     reset: function () {
+    //         this.currentPhase = 0;
+    //         this.opacity = 0;
+    //         this.update(false);
+    //     }
 
-    };
+    // };
 
 
     //******************************************************************************
@@ -2537,8 +2537,8 @@
         init: function () {
             this.addCloud();
             this.horizonLine = new Land(this.canvas, this.spritePos.HORIZON);
-            this.nightMode = new DarkMode(this.canvas, this.spritePos.MOON,
-                this.dimensions.WIDTH);
+            // this.nightMode = new DarkMode(this.canvas, this.spritePos.MOON,
+            //     this.dimensions.WIDTH);
         },
 
         /**
@@ -2552,7 +2552,7 @@
         update: function (deltaTime, currentSpeed, updateBox, showNightMode) {
             this.runningTime += deltaTime;
             this.horizonLine.update(deltaTime, currentSpeed);
-            this.nightMode.update(showNightMode);
+            // this.nightMode.update(showNightMode);
             this.updateClouds(deltaTime, currentSpeed);
 
             if (updateBox) {
@@ -2682,7 +2682,7 @@
         reset: function () {
             this.Blocks = [];
             this.horizonLine.reset();
-            this.nightMode.reset();
+            // this.nightMode.reset();
         },
 
         /**
