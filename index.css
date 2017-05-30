@@ -53,7 +53,7 @@ html, body {
   width: 100%;
 }
 
-.offline .runner-container {
+.offline .Nomad-container {
   height: 150px;
   max-width: 600px;
   overflow: hidden;
@@ -62,7 +62,7 @@ html, body {
   width: 44px;
 }
 
-.offline .runner-canvas {
+.offline .Nomad-canvas {
   height: 150px;
   max-width: 600px;
   opacity: 1;
@@ -84,7 +84,7 @@ html, body {
 
 #offline-resources {
   display: none;
-}
+}/*
 
 @media (max-width: 420px) {
   .suggested-left > #control-buttons, .suggested-right > #control-buttons {
@@ -149,4 +149,4 @@ html, body {
     overflow: inherit;
     padding: 0 8px;
   }
-}
+}*/
