@@ -90,14 +90,29 @@
     /** @const */
     var IS_HIDPI = window.devicePixelRatio > 1;
 
-    // /** @const */
-    // var IS_IOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
 
-    // /** @const */
-    // var IS_MOBILE = /Android/.test(window.navigator.userAgent) || IS_IOS;
+    /**
+    States:
+    0 start state
+    1 jump state
+    2 walking state
+    3 slide down state
+    4 final state
 
-    // /** @const */
-    // var IS_TOUCH_ENABLED = 'ontouchstart' in window;
+    Inputs:
+    1 spacebar/up
+    2 down
+    3 do nothing
+    4 hit
+    **/
+
+    var logic = [
+        [1, 0, 0, 0],
+        [1, 3, 2, 4],
+        [1, 3, 2, 4],
+        [1, 3, 2, 4],
+        [4, 4, 4, 4]
+    ];
 
     /**
      * Default game configuration.
@@ -149,8 +164,7 @@
         ICON: 'icon-offline',
         INVERTED: 'inverted',
         SNACKBAR: 'snackbar',
-        SNACKBAR_SHOW: 'snackbar-show',
-        TOUCH_CONTROLLER: 'controller'
+        SNACKBAR_SHOW: 'snackbar-show'
     };
 
 
@@ -168,8 +182,8 @@
             BIRD: { x: 134, y: 2 },
             RESTART: { x: 2, y: 2 },
             TEXT_SPRITE: { x: 655, y: 2 },
-            BOY: { x: 848, y: 2 },
-            STAR: { x: 645, y: 2 }
+            BOY: { x: 848, y: 2 }
+            // STAR: { x: 645, y: 2 }
         },
         HDPI: {
             OBSTACLE_LARGE: { x: 652, y: 2 },
@@ -180,8 +194,8 @@
             BIRD: { x: 260, y: 2 },
             RESTART: { x: 2, y: 2 },
             TEXT_SPRITE: { x: 1294, y: 2 },
-            BOY: { x: 1678, y: 2 },
-            STAR: { x: 1276, y: 2 }
+            BOY: { x: 1678, y: 2 }
+            // STAR: { x: 1276, y: 2 }
         }
     };
 
@@ -238,24 +252,6 @@
             // return loadTimeData && loadTimeData.valueExists('disabledEasterEgg');
             return false;
         },
-
-        /**
-         * For disabled instances, set up a snackbar with the disabled message.
-         */
-       /* setupDisabledNomad: function () {
-            this.containerEl = document.createElement('div');
-            this.containerEl.className = Nomad.classes.SNACKBAR;
-            this.containerEl.textContent = loadTimeData.getValue('disabledEasterEgg');
-            this.outerContainerEl.appendChild(this.containerEl);
-
-            // Show notification when the activation key is pressed.
-            document.addEventListener(Nomad.events.KEYDOWN, function (e) {
-                if (Nomad.keyActions.JUMP[e.keyCode]) {
-                    this.containerEl.classList.add(Nomad.classes.SNACKBAR_SHOW);
-                    document.querySelector('.icon').classList.add('icon-disabled');
-                }
-            }.bind(this));
-        },*/
 
         /**
          * Setting individual settings for debugging.
@@ -376,85 +372,16 @@
             this.distanceMeter = new distanceCalc(this.canvas,
                 this.spriteDef.TEXT_SPRITE, this.dimensions.WIDTH);
 
-            // Draw t-rex
+            // Draw nomad boy
             this.boy = new Boy(this.canvas, this.spriteDef.BOY);
 
             this.outerContainerEl.appendChild(this.containerEl);
 
-           /* if (IS_MOBILE) {
-                this.createTouchController();
-            }*/
 
             this.startListeners();
             this.update();
 
-            // window.addEventListener(Nomad.events.RESIZE,
-            //     this.debounceResize.bind(this));
         },
-
-
-        
-        /**
-         * Create the touch controller. A div that covers whole screen.
-         *//*
-        createTouchController: function () {
-            this.touchController = document.createElement('div');
-            this.touchController.className = Nomad.classes.TOUCH_CONTROLLER;
-            this.outerContainerEl.appendChild(this.touchController);
-        },*/
-
-        /**
-         * Debounce the resize event.
-         */
-       /* debounceResize: function () {
-            if (!this.resizeTimerId_) {
-                this.resizeTimerId_ =
-                    setInterval(this.adjustDimensions.bind(this), 250);
-            }
-        },*/
-
-        /**
-         * Adjust game space dimensions on resize.
-         *//*
-        adjustDimensions: function () {
-            clearInterval(this.resizeTimerId_);
-            this.resizeTimerId_ = null;
-
-            var boxStyles = window.getComputedStyle(this.outerContainerEl);
-            var padding = Number(boxStyles.paddingLeft.substr(0,
-                boxStyles.paddingLeft.length - 2));
-
-            this.dimensions.WIDTH = this.outerContainerEl.offsetWidth - padding * 2;
-
-            // Redraw the elements back onto the canvas.
-            if (this.canvas) {
-                this.canvas.width = this.dimensions.WIDTH;
-                this.canvas.height = this.dimensions.HEIGHT;
-
-                Nomad.updateScreenScaling(this.canvas);
-
-                this.distanceMeter.calculateX(this.dimensions.WIDTH);
-                this.clearScreen();
-                this.horizon.update(0, 0, true);
-                this.boy.update(0);
-
-                // Outer container and distance meter.
-                if (this.playing || this.crashed || this.paused) {
-                    this.containerEl.style.width = this.dimensions.WIDTH + 'px';
-                    this.containerEl.style.height = this.dimensions.HEIGHT + 'px';
-                    this.distanceMeter.update(0, Math.ceil(this.distanceRan));
-                    this.stop();
-                } else {
-                    this.boy.draw(0, 0);
-                }
-
-                // Game over panel.
-                if (this.crashed && this.GameOverScreen) {
-                    this.GameOverScreen.updateDimensions(this.dimensions.WIDTH);
-                    this.GameOverScreen.draw();
-                }
-            }
-        },*/
 
         /**
          * Play the game intro.
@@ -570,27 +497,7 @@
                     this.playSound(this.soundFx.SCORE);
                 }
 
-                // Night mode.
-                if (this.invertTimer > this.values.INVERT_FADE_DURATION) {
-                    this.invertTimer = 0;
-                    this.invertTrigger = false;
-                    this.invert();
-                } else if (this.invertTimer) {
-                    this.invertTimer += deltaTime;
-                } else {
-                    var actualDistance =
-                        this.distanceMeter.getDist(Math.ceil(this.distanceRan));
-
-                    if (actualDistance > 0) {
-                        this.invertTrigger = !(actualDistance %
-                            this.values.INVERT_DISTANCE);
-
-                        if (this.invertTrigger && this.invertTimer === 0) {
-                            this.invertTimer += deltaTime;
-                            this.invert();
-                        }
-                    }
-                }
+                
             }
 
             if (this.playing || (!this.activated &&
@@ -627,17 +534,8 @@
             // Keys.
             document.addEventListener(Nomad.events.KEYDOWN, this);
             document.addEventListener(Nomad.events.KEYUP, this);
-
-            // if (IS_MOBILE) {
-            //     // Mobile only touch devices.
-            //     this.touchController.addEventListener(Nomad.events.TOUCHSTART, this);
-            //     this.touchController.addEventListener(Nomad.events.TOUCHEND, this);
-            //     this.containerEl.addEventListener(Nomad.events.TOUCHSTART, this);
-            // } else {
-                // Mouse.
-                document.addEventListener(Nomad.events.MOUSEDOWN, this);
-                document.addEventListener(Nomad.events.MOUSEUP, this);
-            // }
+            document.addEventListener(Nomad.events.MOUSEDOWN, this);
+            document.addEventListener(Nomad.events.MOUSEUP, this);
         },
 
         /**
@@ -646,15 +544,8 @@
         stopListeners: function () {
             document.removeEventListener(Nomad.events.KEYDOWN, this);
             document.removeEventListener(Nomad.events.KEYUP, this);
-
-            // if (IS_MOBILE) {
-            //     this.touchController.removeEventListener(Nomad.events.TOUCHSTART, this);
-            //     this.touchController.removeEventListener(Nomad.events.TOUCHEND, this);
-            //     this.containerEl.removeEventListener(Nomad.events.TOUCHSTART, this);
-            // } else {
-                document.removeEventListener(Nomad.events.MOUSEDOWN, this);
-                document.removeEventListener(Nomad.events.MOUSEUP, this);
-            // }
+            document.removeEventListener(Nomad.events.MOUSEDOWN, this);
+            document.removeEventListener(Nomad.events.MOUSEUP, this);
         },
 
         /**
@@ -662,11 +553,6 @@
          * @param {Event} e
          */
         onDownPress: function (e) {
-            // Prevent native page scrolling whilst tapping on mobile.
-            // if (IS_MOBILE && this.playing) {
-            //     e.preventDefault();
-            // }
-
             if (e.target != this.detailsButton) {
                 if (!this.crashed && (Nomad.keyActions.JUMP[e.keyCode] ||
                     e.type == Nomad.events.TOUCHSTART)) {
@@ -931,18 +817,6 @@
     function randomNumGen(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
-
-
-    /**
-     * Vibrate on mobile devices.
-     * @param {number} duration Duration of the vibration in milliseconds.
-     *//*
-    function vibrate(duration) {
-        if (IS_MOBILE && window.navigator.vibrate) {
-            window.navigator.vibrate(duration);
-        }
-    }*/
-
 
     /**
      * Create canvas element.
@@ -1480,7 +1354,7 @@
 
     //******************************************************************************
     /**
-     * T-rex game character.
+     * Nomad Boy game character.
      * @param {HTMLCanvas} canvas
      * @param {Object} spritePos Positioning within image sprite.
      * @constructor
@@ -1517,7 +1391,7 @@
 
 
     /**
-     * T-rex player config.
+     * Nomad Boy player config.
      * @enum {number}
      */
     Boy.values = {
@@ -1574,7 +1448,6 @@
      */
     Boy.BLINK_TIMING = 7000;
 
-
     /**
      * Animation config for different states.
      * @enum {Object}
@@ -1605,7 +1478,7 @@
 
     Boy.prototype = {
         /**
-         * T-rex player initaliser.
+         * Nomad Boy player initaliser.
          * Sets the t-rex to blink at random intervals.
          */
         init: function () {
@@ -1675,7 +1548,7 @@
         },
 
         /**
-         * Draw the t-rex to a particular position.
+         * Draw the nomad to a particular position.
          * @param {number} x
          * @param {number} y
          */
@@ -1827,7 +1700,7 @@
         },
 
         /**
-         * Reset the t-rex to running at start of game.
+         * Reset the nomad to running at start of game.
          */
         reset: function () {
             this.yPos = this.groundYPos;
@@ -2199,162 +2072,7 @@
     };
 
 
-    //******************************************************************************
-
-    /**
-     * Nightmode shows a moon and stars on the horizon.
-     */
-    // function DarkMode(canvas, spritePos, containerWidth) {
-    //     this.spritePos = spritePos;
-    //     this.canvas = canvas;
-    //     this.canvasCtx = canvas.getContext('2d');
-    //     this.xPos = containerWidth - 50;
-    //     this.yPos = 30;
-    //     this.currentPhase = 0;
-    //     this.opacity = 0;
-    //     this.containerWidth = containerWidth;
-    //     this.stars = [];
-    //     this.drawStars = false;
-    //     this.placeStars();
-    // };
-
-    // /**
-    //  * @enum {number}
-    //  */
-    // DarkMode.values = {
-    //     FADE_SPEED: 0.035,
-    //     HEIGHT: 40,
-    //     MOON_SPEED: 0.25,
-    //     NUM_STARS: 2,
-    //     STAR_SIZE: 9,
-    //     STAR_SPEED: 0.3,
-    //     STAR_MAX_Y: 70,
-    //     WIDTH: 20
-    // };
-
-    // DarkMode.phases = [140, 120, 100, 60, 40, 20, 0];
-
-    // DarkMode.prototype = {
-    //     /**
-    //      * Update moving moon, changing phases.
-    //      * @param {boolean} activated Whether night mode is activated.
-    //      * @param {number} delta
-    //      */
-    //     update: function (activated, delta) {
-    //         // Moon phase.
-    //         if (activated && this.opacity == 0) {
-    //             this.currentPhase++;
-
-    //             if (this.currentPhase >= DarkMode.phases.length) {
-    //                 this.currentPhase = 0;
-    //             }
-    //         }
-
-    //         // Fade in / out.
-    //         if (activated && (this.opacity < 1 || this.opacity == 0)) {
-    //             this.opacity += DarkMode.values.FADE_SPEED;
-    //         } else if (this.opacity > 0) {
-    //             this.opacity -= DarkMode.values.FADE_SPEED;
-    //         }
-
-    //         // Set moon positioning.
-    //         if (this.opacity > 0) {
-    //             this.xPos = this.updateX(this.xPos, DarkMode.values.MOON_SPEED);
-
-    //             // Update stars.
-    //             if (this.drawStars) {
-    //                 for (var i = 0; i < DarkMode.values.NUM_STARS; i++) {
-    //                     this.stars[i].x = this.updateX(this.stars[i].x,
-    //                         DarkMode.values.STAR_SPEED);
-    //                 }
-    //             }
-    //             this.draw();
-    //         } else {
-    //             this.opacity = 0;
-    //             this.placeStars();
-    //         }
-    //         this.drawStars = true;
-    //     },
-
-    //     updateX: function (currentPos, speed) {
-    //         if (currentPos < -DarkMode.values.WIDTH) {
-    //             currentPos = this.containerWidth;
-    //         } else {
-    //             currentPos -= speed;
-    //         }
-    //         return currentPos;
-    //     },
-
-    //     draw: function () {
-    //         var moonSourceWidth = this.currentPhase == 3 ? DarkMode.values.WIDTH * 2 :
-    //             DarkMode.values.WIDTH;
-    //         var moonSourceHeight = DarkMode.values.HEIGHT;
-    //         var moonSourceX = this.spritePos.x + DarkMode.phases[this.currentPhase];
-    //         var moonOutputWidth = moonSourceWidth;
-    //         var starSize = DarkMode.values.STAR_SIZE;
-    //         var starSourceX = Nomad.spriteCoordinates.LDPI.STAR.x;
-
-    //         if (IS_HIDPI) {
-    //             moonSourceWidth *= 2;
-    //             moonSourceHeight *= 2;
-    //             moonSourceX = this.spritePos.x +
-    //                 (DarkMode.phases[this.currentPhase] * 2);
-    //             starSize *= 2;
-    //             starSourceX = Nomad.spriteCoordinates.HDPI.STAR.x;
-    //         }
-
-    //         this.canvasCtx.save();
-    //         this.canvasCtx.globalAlpha = this.opacity;
-
-    //         // Stars.
-    //         if (this.drawStars) {
-    //             for (var i = 0; i < DarkMode.values.NUM_STARS; i++) {
-    //                 this.canvasCtx.drawImage(Nomad.imageSprite,
-    //                     starSourceX, this.stars[i].sourceY, starSize, starSize,
-    //                     Math.round(this.stars[i].x), this.stars[i].y,
-    //                     DarkMode.values.STAR_SIZE, DarkMode.values.STAR_SIZE);
-    //             }
-    //         }
-
-    //         // Moon.
-    //         this.canvasCtx.drawImage(Nomad.imageSprite, moonSourceX,
-    //             this.spritePos.y, moonSourceWidth, moonSourceHeight,
-    //             Math.round(this.xPos), this.yPos,
-    //             moonOutputWidth, DarkMode.values.HEIGHT);
-
-    //         this.canvasCtx.globalAlpha = 1;
-    //         this.canvasCtx.restore();
-    //     },
-
-    //     // Do star placement.
-    //     placeStars: function () {
-    //         var segmentSize = Math.round(this.containerWidth /
-    //             DarkMode.values.NUM_STARS);
-
-    //         for (var i = 0; i < DarkMode.values.NUM_STARS; i++) {
-    //             this.stars[i] = {};
-    //             this.stars[i].x = randomNumGen(segmentSize * i, segmentSize * (i + 1));
-    //             this.stars[i].y = randomNumGen(0, DarkMode.values.STAR_MAX_Y);
-
-    //             if (IS_HIDPI) {
-    //                 this.stars[i].sourceY = Nomad.spriteCoordinates.HDPI.STAR.y +
-    //                     DarkMode.values.STAR_SIZE * 2 * i;
-    //             } else {
-    //                 this.stars[i].sourceY = Nomad.spriteCoordinates.LDPI.STAR.y +
-    //                     DarkMode.values.STAR_SIZE * i;
-    //             }
-    //         }
-    //     },
-
-    //     reset: function () {
-    //         this.currentPhase = 0;
-    //         this.opacity = 0;
-    //         this.update(false);
-    //     }
-
-    // };
-
-
+    
     //******************************************************************************
 
     /**
