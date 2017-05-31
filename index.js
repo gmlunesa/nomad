@@ -32,10 +32,10 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
             return Nomad.instance_;
         }
         
-        //init the singlton instance
+        //ninit the singleton instance
         Nomad.instance_ = this;
 
-        //Layout Details
+        // layout Details
         this.outerCont = document.querySelector(outerContainerId);
         this.container1 = null;
         this.snackbar1 = null;
@@ -48,21 +48,25 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
         this.canvas = null;
         this.canvasContainer = null;
 
+        this.Blocks = [];
+
+        // nomad character
         this.boy = null;
 
+        // time and distance details
         this.distanceMeasure = null;
         this.distanceRan = 0;
-
-        this.hiScore = 0;
 
         this.time = 0;
         this.runningTime = 0;
         this.secPerFrame = 1000 / FPS;
         this.curSpeed = this.values.SPEED;
 
-        this.Blocks = [];
+        // score
+        this.hiScore = 0;
 
-        // GAME STATES
+    
+        // game states
         this.activated = false; 
         this.playing = false; // Whether the game is currently in play state.
         this.crashed = false;// whether the game has crashe
@@ -117,6 +121,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
         [4, 4, 4, 4]
     ];
 
+    // contants and factors in the game
     Nomad.values = {
         ACCELERATION: 0.001,
         BG_CLOUD_SPEED: 0.2,
@@ -145,7 +150,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
         HEIGHT: 150
     };
 
-    //CSS STUFF
+    // CSS STUFF
     Nomad.classes = {
         CANVAS: 'Nomad-canvas',
         CONTAINER: 'Nomad-container',
@@ -157,8 +162,9 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
     };
 
 
+    // sprite coordinates
     Nomad.spriteCoordinates = {
-        LDPI: {
+        LDPI: { // for 100%
             BLOCK_LARGE: { x: 332, y: 2 },
             BLOCK_SMALL: { x: 228, y: 2 },
             CLOUD: { x: 86, y: 2 },
@@ -168,7 +174,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
             TEXT_SPRITE: { x: 655, y: 2 },
             BOY: { x: 848, y: 2 }
         },
-        HDPI: {
+        HDPI: { //  for 200% zoom
             BLOCK_LARGE: { x: 652, y: 2 },
             BLOCK_SMALL: { x: 446, y: 2 },
             CLOUD: { x: 166, y: 2 },
@@ -268,7 +274,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
             this.container1 = document.createElement('div');
             this.container1.className = Nomad.classes.CONTAINER;
 
-            this.canvas = createCanvas(this.container1, this.defaultSizes.WIDTH,
+            this.canvas = inflateCanvas(this.container1, this.defaultSizes.WIDTH,
                 this.defaultSizes.HEIGHT, Nomad.classes.PLAYER);
 
             this.canvasContainer = this.canvas.getContext('2d');
@@ -357,12 +363,12 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
                 this.runningTime += deltaTime;
                 var hasBlocks = this.runningTime > this.values.CLEAR_TIME;
 
-                // First jump triggers the intro.
+                // if first click, then start the intro
                 if (this.boy.jumpCtr == 1 && !this.intro) {
                     this.gameIntro();
                 }
 
-                // The horizon doesn't move until the intro is over.
+                // trigger update
                 if (this.intro) {
                     this.horizon.update(0, this.curSpeed, hasBlocks);
                 } else {
@@ -371,7 +377,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
                         this.inverted);
                 }
 
-                // Check for collisions.
+                // check for any hits or collisions
                 var collision = hasBlocks &&
                     checkForHit(this.horizon.Blocks[0], this.boy);
 
@@ -387,14 +393,12 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
 
                 var playAchievementSound = this.distanceMeasure.update(deltaTime,
                     Math.ceil(this.distanceRan));
-
                 if (playAchievementSound) {
                     this.playSound(this.soundFx.SCORE);
                 }
-
-                
             }
 
+            // trigger update
             if (this.playing || (!this.activated &&
                 this.boy.blinkCount < Nomad.values.MAX_BLINK_COUNT)) {
                 this.boy.update(deltaTime);
@@ -417,16 +421,13 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
             }.bind(this))(e.type, Nomad.events);
         },
 
-
+        // LISTENERS
         startListeners: function () {
             document.addEventListener(Nomad.events.KEYDOWN, this);
             document.addEventListener(Nomad.events.KEYUP, this);
             document.addEventListener(Nomad.events.MOUSEDOWN, this);
             document.addEventListener(Nomad.events.MOUSEUP, this);
         },
-
-     
-
         stopListeners: function () {
             document.removeEventListener(Nomad.events.KEYDOWN, this);
             document.removeEventListener(Nomad.events.KEYUP, this);
@@ -434,8 +435,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
             document.removeEventListener(Nomad.events.MOUSEUP, this);
         },
 
-     
-
+        // STATE CHANGES
         onDownPress: function (e) {
             if (e.target != this.detailsButton) {
                 if (!this.crashed && (Nomad.keyActions.JUMP[e.keyCode])) {
@@ -487,7 +487,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
             } else if (this.crashed) {
                 var deltaTime = getCurrTime() - this.time;
 
-                if (Nomad.keyActions.RESTART[keyCode] || this.isLeftClickOnCanvas(e) ||
+                if (Nomad.keyActions.RESTART[keyCode] ||
                     (deltaTime >= this.values.GAMEOVER_CLEAR_TIME &&
                         Nomad.keyActions.JUMP[keyCode])) {
                     this.restart();
@@ -498,15 +498,6 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
                 this.play();
             }
         },
-
-
-        isLeftClickOnCanvas: function (e) {
-            return e.button != null && e.button < 2 &&
-                e.type == Nomad.events.MOUSEUP && e.target == this.canvas;
-        },
-
-        
-
         schedUpdate: function () {
             if (!this.updatePending) {
                 this.updatePending = true;
@@ -514,16 +505,13 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
             }
         },
 
-        
-
         isRunning: function () {
             return !!this.raqId;
         },
 
-
+        // triggered during collisions/hits
         gameOver: function () {
             this.playSound(this.soundFx.HIT);
-         
 
             this.stop();
             this.crashed = true;
@@ -584,8 +572,6 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
             }
         },
 
-        
-
         onVisibilityChange: function (e) {
             if (document.hidden || document.webkitHidden || e.type == 'blur' ||
                 document.visibilityState != 'visible') {
@@ -619,29 +605,28 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
         }
     };
 
-
-    Nomad.updateScreenScaling = function (canvas, opt_width, opt_height) {
+    // measure pixel ratios to render best quality
+    Nomad.updateScreenScaling = function (canvas, optional_width, optional_height) {
         var context = canvas.getContext('2d');
 
-        var devicePixelRatio = Math.floor(window.devicePixelRatio) || 1;
-        var backingStoreRatio = Math.floor(context.webkitBackingStorePixelRatio) || 1;
-        var ratio = devicePixelRatio / backingStoreRatio;
+        var pxRatio = Math.floor(window.devicePixelRatio) || 1;
+        var backingStorePxRatio = Math.floor(context.webkitBackingStorePixelRatio) || 1;
+        var ratio = pxRatio / backingStorePxRatio;
 
  
-        if (devicePixelRatio !== backingStoreRatio) {
-            var oldWidth = opt_width || canvas.width;
-            var oldHeight = opt_height || canvas.height;
+        if (pxRatio !== backingStorePxRatio) {
+            var oldWidth = optional_width || canvas.width;
+            var oldHeight = optional_height || canvas.height;
 
             canvas.width = oldWidth * ratio;
             canvas.height = oldHeight * ratio;
 
             canvas.style.width = oldWidth + 'px';
             canvas.style.height = oldHeight + 'px';
-
         
             context.scale(ratio, ratio);
             return true;
-        } else if (devicePixelRatio == 1) {
+        } else if (pxRatio == 1) {
        
             canvas.style.width = canvas.width + 'px';
             canvas.style.height = canvas.height + 'px';
@@ -655,8 +640,8 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-
-    function createCanvas(container, width, height, opt_classname) {
+    // inflator for the game
+    function inflateCanvas(container, width, height, opt_classname) {
         var canvas = document.createElement('canvas');
         canvas.className = opt_classname ? Nomad.classes.CANVAS + ' ' +
             opt_classname : Nomad.classes.CANVAS;
@@ -686,7 +671,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
     }
 
 
-   
+    // game over screen triggered during collisions
     function GameOverScreen(canvas, textImgPos, restartImgPos, defaultSizes) {
         this.canvas = canvas;
         this.canvasContainer = canvas.getContext('2d');
@@ -709,10 +694,10 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
 
     GameOverScreen.prototype = {
      
-        updateDimensions: function (width, opt_height) {
+        updateDimensions: function (width, optional_height) {
             this.canvasDimensions.WIDTH = width;
-            if (opt_height) {
-                this.canvasDimensions.HEIGHT = opt_height;
+            if (optional_height) {
+                this.canvasDimensions.HEIGHT = optional_height;
             }
         },
 
@@ -765,6 +750,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
     };
 
 
+    // check for hits or collisions
     function checkForHit(Block, boy, opt_canvasCtx) {
         var BlockBoxXPos = Nomad.defaultSizes.WIDTH + Block.xPos;
 
@@ -814,6 +800,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
     };
 
 
+    // coordinate adjuster
     function adjustHitBox(box, adjustment) {
         return new HitBox(
             box.x + adjustment.x,
@@ -822,7 +809,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
             box.height);
     };
 
-
+    // inflater of the hitbox
     function drawHitBox(canvasContainer, rBoyBox, BlockBox) {
         canvasContainer.save();
         canvasContainer.strokeStyle = '#f00';
@@ -834,7 +821,15 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
         canvasContainer.restore();
     };
 
+    // coordinate setter
+    function HitBox(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    };
 
+    // compares any intersection within the boy and the obstacle box
     function boxCompare(rBoyBox, BlockBox) {
         var crashed = false;
         var rBoyBoxX = rBoyBox.x;
@@ -854,14 +849,8 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
         return crashed;
     };
 
-    function HitBox(x, y, w, h) {
-        this.x = x;
-        this.y = y;
-        this.width = w;
-        this.height = h;
-    };
 
-
+    // Block -- the wrapper of our sprites
     function Block(canvasContainer, type, spriteImgPos, defaultSizes,
         gapCoefficient, speed, opt_xOffset) {
 
@@ -1053,7 +1042,7 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
     ];
 
 
-    
+    // the boy is the main character of the game
     function Boy(canvas, spritePos) {
         this.canvas = canvas;
         this.canvasContainer = canvas.getContext('2d');
@@ -1390,18 +1379,13 @@ This will run on Google Chrome, with JavaScript enabled. Please open `index.html
         FLASHLOOPS: 3
     };
 
-
-
     distanceCalc.defaultSizes = {
         WIDTH: 10,
         HEIGHT: 13,
         DEST_WIDTH: 11
     };
 
-
-
     distanceCalc.yPos = [0, 13, 27, 40, 53, 67, 80, 93, 107, 120];
-
 
     distanceCalc.prototype = {
 
