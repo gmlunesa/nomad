@@ -45,7 +45,7 @@
 
         this.Blocks = [];
 
-        this.activated = false; // Whether the easter egg has been activated.
+        this.activated = false; 
         this.playing = false; // Whether the game is currently in play state.
         this.crashed = false;
         this.paused = false;
@@ -136,7 +136,6 @@
         MAX_Block_DUPLICATION: 2,
         MAX_SPEED: 13,
         MIN_JUMP_HEIGHT: 35,
-        MOBILE_SPEED_COEFFICIENT: 1.2,
         RESOURCE_TEMPLATE_ID: 'audio-resources',
         SPEED: 6,
         SPEED_DROP_COEFFICIENT: 3
@@ -178,24 +177,20 @@
             OBSTACLE_SMALL: { x: 228, y: 2 },
             CLOUD: { x: 86, y: 2 },
             HORIZON: { x: 2, y: 54 },
-            // MOON: { x: 484, y: 2 },
             BIRD: { x: 134, y: 2 },
             RESTART: { x: 2, y: 2 },
             TEXT_SPRITE: { x: 655, y: 2 },
             BOY: { x: 848, y: 2 }
-            // STAR: { x: 645, y: 2 }
         },
         HDPI: {
             OBSTACLE_LARGE: { x: 652, y: 2 },
             OBSTACLE_SMALL: { x: 446, y: 2 },
             CLOUD: { x: 166, y: 2 },
             HORIZON: { x: 2, y: 104 },
-            // MOON: { x: 954, y: 2 },
             BIRD: { x: 260, y: 2 },
             RESTART: { x: 2, y: 2 },
             TEXT_SPRITE: { x: 1294, y: 2 },
             BOY: { x: 1678, y: 2 }
-            // STAR: { x: 1276, y: 2 }
         }
     };
 
@@ -331,12 +326,7 @@
         setSpeed: function (opt_speed) {
             var speed = opt_speed || this.currentSpeed;
 
-            // Reduce the speed on smaller mobile screens.
-            if (this.dimensions.WIDTH < DEFAULT_WIDTH) {
-                var mobileSpeed = speed * this.dimensions.WIDTH / DEFAULT_WIDTH *
-                    this.values.MOBILE_SPEED_COEFFICIENT;
-                this.currentSpeed = mobileSpeed > speed ? speed : mobileSpeed;
-            } else if (opt_speed) {
+            if (opt_speed) {
                 this.currentSpeed = opt_speed;
             }
         },
@@ -405,9 +395,6 @@
                 this.containerEl.style.webkitAnimation = 'intro .4s ease-out 1 both';
                 this.containerEl.style.width = this.dimensions.WIDTH + 'px';
 
-                // if (this.touchController) {
-                //     this.outerContainerEl.appendChild(this.touchController);
-                // }
                 this.playing = true;
                 this.activated = true;
             } else if (this.crashed) {
@@ -528,7 +515,7 @@
         },
 
         /**
-         * Bind relevant key / mouse / touch listeners.
+         * Bind relevant key / mouse
          */
         startListeners: function () {
             // Keys.
@@ -766,9 +753,6 @@
      * Updates the canvas size taking into
      * account the backing store pixel ratio and
      * the device pixel ratio.
-     *
-     * See article by Paul Lewis:
-     * http://www.html5rocks.com/en/tutorials/canvas/hidpi/
      *
      * @param {HTMLCanvasElement} canvas
      * @param {number} opt_width
@@ -1165,7 +1149,6 @@
 
                 // Check if Block can be positioned at various heights.
                 if (Array.isArray(this.typeConfig.yPos)) {
-                    // var yPosConfig = IS_MOBILE ? this.typeConfig.yPosMobile :
                     var yPosConfig = this.typeConfig.yPos;
                     this.yPos = yPosConfig[randomNumGen(0, yPosConfig.length - 1)];
                 } else {
@@ -1334,7 +1317,6 @@
             width: 46,
             height: 40,
             yPos: [100, 75, 50], // Variable height.
-            yPosMobile: [100, 50], // Variable height mobile.
             multipleSpeed: 999,
             minSpeed: 8.5,
             minGap: 150,
