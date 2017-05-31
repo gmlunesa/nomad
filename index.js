@@ -1,3 +1,26 @@
+/*
+# nomad
+
+This is a clone of the Google Chrome dinosaur game clone, 
+developed by [Chromium](https://cs.chromium.org/chromium/src/components/neterror/resources/offline.js?q=t-rex+package:%5Echromium$&dr=C&l=7).
+
+### Gameplay
+
+The main character is a nomad in the desert, looking for a new home. He must dodge rocks and birds in order to survive. 
+This game is infinite, and the speed gets faster exponentially. The stones and birds will be randomly generated.
+
+**Moves**:
+
+* Spacebar/UP arrow: START/JUMP
+* DOWN arrow: DUCK
+
+### System Requirements
+
+This will run on Google Chrome, with JavaScript enabled. Please open `index.html` to get started.
+
+
+*/
+
 
 (function () {
     'use strict';
@@ -34,8 +57,8 @@
 
         this.time = 0;
         this.runningTime = 0;
-        this.msPerFrame = 1000 / FPS;
-        this.currentSpeed = this.values.SPEED;
+        this.secPerFrame = 1000 / FPS;
+        this.curSpeed = this.values.SPEED;
 
         this.Blocks = [];
 
@@ -99,7 +122,7 @@
         BG_CLOUD_SPEED: 0.2,
         BOTTOM_PAD: 10,
         CLEAR_TIME: 3000,
-        CLOUD_FREQUENCY: 0.5,
+        CLOUD_FREQ: 0.5,
         GAMEOVER_CLEAR_TIME: 750,
         SPACEFACTOR: 0.6,
         GRAVITY: 0.6,
@@ -108,7 +131,7 @@
         INVERT_DISTANCE: 700,
         MAX_BLINK_COUNT: 3,
         MAX_CLOUDS: 6,
-        MAX_BLOCK_LENGTH: 3,
+        MAX_Box_LENGTH: 3,
         MAX_BLOCK_DUPLICATION: 2,
         MAX_SPEED: 13,
         MIN_JUMP_HEIGHT: 35,
@@ -136,21 +159,21 @@
 
     Nomad.spriteCoordinates = {
         LDPI: {
-            OBSTACLE_LARGE: { x: 332, y: 2 },
-            OBSTACLE_SMALL: { x: 228, y: 2 },
+            BLOCK_LARGE: { x: 332, y: 2 },
+            BLOCK_SMALL: { x: 228, y: 2 },
             CLOUD: { x: 86, y: 2 },
             HORIZON: { x: 2, y: 54 },
-            BIRD: { x: 134, y: 2 },
+            DUCK: { x: 134, y: 2 },
             RESTART: { x: 2, y: 2 },
             TEXT_SPRITE: { x: 655, y: 2 },
             BOY: { x: 848, y: 2 }
         },
         HDPI: {
-            OBSTACLE_LARGE: { x: 652, y: 2 },
-            OBSTACLE_SMALL: { x: 446, y: 2 },
+            BLOCK_LARGE: { x: 652, y: 2 },
+            BLOCK_SMALL: { x: 446, y: 2 },
             CLOUD: { x: 166, y: 2 },
             HORIZON: { x: 2, y: 104 },
-            BIRD: { x: 260, y: 2 },
+            DUCK: { x: 260, y: 2 },
             RESTART: { x: 2, y: 2 },
             TEXT_SPRITE: { x: 1294, y: 2 },
             BOY: { x: 1678, y: 2 }
@@ -177,8 +200,6 @@
         MOUSEDOWN: 'mousedown',
         MOUSEUP: 'mouseup',
         RESIZE: 'resize',
-        TOUCHEND: 'touchend',
-        TOUCHSTART: 'touchstart',
         VISIBILITY: 'visibilitychange',
         BLUR: 'blur',
         FOCUS: 'focus',
@@ -189,25 +210,23 @@
     Nomad.prototype = {
 
         isDisabled: function () {
-            // return loadTimeData && loadTimeData.valueExists('disabledEasterEgg');
             return false;
         },
 
-        //ADJUST THE ZOOM IN AND THE ZOOM OUT
         loadImg: function () {
             if (IS_HIDPI) {
-                Nomad.imageSprite = document.getElementById('offline-resources-2x');
+                Nomad.imgSprite = document.getElementById('offline-resources-2x');
                 this.spriteDef = Nomad.spriteCoordinates.HDPI;
             } else {
-                Nomad.imageSprite = document.getElementById('offline-resources-1x');
+                Nomad.imgSprite = document.getElementById('offline-resources-1x');
                 this.spriteDef = Nomad.spriteCoordinates.LDPI;
             }
 
-            if (Nomad.imageSprite.complete) {
+            if (Nomad.imgSprite.complete) {
                 this.init();
             } else {
                 // If the images are not yet loaded, add a listener.
-                Nomad.imageSprite.addEventListener(Nomad.events.LOAD,
+                Nomad.imgSprite.addEventListener(Nomad.events.LOAD,
                     this.init.bind(this));
             }
         },
@@ -232,10 +251,10 @@
         },
 
         setSpeed: function (optionalSpeed) {
-            var speed = optionalSpeed || this.currentSpeed;
+            var speed = optionalSpeed || this.curSpeed;
 
             if (optionalSpeed) {
-                this.currentSpeed = optionalSpeed;
+                this.curSpeed = optionalSpeed;
             }
         },
 
@@ -331,7 +350,7 @@
             if (this.playing) {
                 this.clearScreen();
 
-                if (this.boy.jumping) {
+                if (this.boy.isJump) {
                     this.boy.updateJump(deltaTime);
                 }
 
@@ -339,16 +358,16 @@
                 var hasBlocks = this.runningTime > this.values.CLEAR_TIME;
 
                 // First jump triggers the intro.
-                if (this.boy.jumpCount == 1 && !this.intro) {
+                if (this.boy.jumpCtr == 1 && !this.intro) {
                     this.gameIntro();
                 }
 
                 // The horizon doesn't move until the intro is over.
                 if (this.intro) {
-                    this.horizon.update(0, this.currentSpeed, hasBlocks);
+                    this.horizon.update(0, this.curSpeed, hasBlocks);
                 } else {
                     deltaTime = !this.activated ? 0 : deltaTime;
-                    this.horizon.update(deltaTime, this.currentSpeed, hasBlocks,
+                    this.horizon.update(deltaTime, this.curSpeed, hasBlocks,
                         this.inverted);
                 }
 
@@ -357,10 +376,10 @@
                     checkForHit(this.horizon.Blocks[0], this.boy);
 
                 if (!collision) {
-                    this.distanceRan += this.currentSpeed * deltaTime / this.msPerFrame;
+                    this.distanceRan += this.curSpeed * deltaTime / this.secPerFrame;
 
-                    if (this.currentSpeed < this.values.MAX_SPEED) {
-                        this.currentSpeed += this.values.ACCELERATION;
+                    if (this.curSpeed < this.values.MAX_SPEED) {
+                        this.curSpeed += this.values.ACCELERATION;
                     }
                 } else {
                     this.gameOver();
@@ -383,19 +402,14 @@
             }
         },
 
-        /**
-         * Event handler.
-         */
         handleEvent: function (e) {
             return (function (evtType, events) {
                 switch (evtType) {
                     case events.KEYDOWN:
-                    case events.TOUCHSTART:
                     case events.MOUSEDOWN:
                         this.onDownPress(e);
                         break;
                     case events.KEYUP:
-                    case events.TOUCHEND:
                     case events.MOUSEUP:
                         this.onUpPress(e);
                         break;
@@ -403,20 +417,16 @@
             }.bind(this))(e.type, Nomad.events);
         },
 
-        /**
-         * Bind relevant key / mouse
-         */
+
         startListeners: function () {
-            // Keys.
             document.addEventListener(Nomad.events.KEYDOWN, this);
             document.addEventListener(Nomad.events.KEYUP, this);
             document.addEventListener(Nomad.events.MOUSEDOWN, this);
             document.addEventListener(Nomad.events.MOUSEUP, this);
         },
 
-        /**
-         * Remove all listeners.
-         */
+     
+
         stopListeners: function () {
             document.removeEventListener(Nomad.events.KEYDOWN, this);
             document.removeEventListener(Nomad.events.KEYUP, this);
@@ -424,14 +434,11 @@
             document.removeEventListener(Nomad.events.MOUSEUP, this);
         },
 
-        /**
-         * Process keydown.
-         * @param {Event} e
-         */
+     
+
         onDownPress: function (e) {
             if (e.target != this.detailsButton) {
-                if (!this.crashed && (Nomad.keyActions.JUMP[e.keyCode] ||
-                    e.type == Nomad.events.TOUCHSTART)) {
+                if (!this.crashed && (Nomad.keyActions.JUMP[e.keyCode])) {
                     if (!this.playing) {
                         this.loadAudio();
                         this.playing = true;
@@ -441,13 +448,13 @@
                         }
                     }
                     //  Play sound effect and jump on starting the game for the first time.
-                    if (!this.boy.jumping && !this.boy.ducking) {
+                    if (!this.boy.isJump && !this.boy.isDuck) {
                         this.playSound(this.soundFx.BUTTON_PRESS);
-                        this.boy.startJump(this.currentSpeed);
+                        this.boy.startJump(this.curSpeed);
                     }
                 }
 
-                if (this.crashed && e.type == Nomad.events.TOUCHSTART &&
+                if (this.crashed &&
                     e.currentTarget == this.container1) {
                     this.restart();
                 }
@@ -455,10 +462,10 @@
 
             if (this.playing && !this.crashed && Nomad.keyActions.DUCK[e.keyCode]) {
                 e.preventDefault();
-                if (this.boy.jumping) {
+                if (this.boy.isJump) {
                     // Speed drop, activated only when jump key is not pressed.
                     this.boy.setDropSpeed();
-                } else if (!this.boy.jumping && !this.boy.ducking) {
+                } else if (!this.boy.isJump && !this.boy.isDuck) {
                     // Duck.
                     this.boy.setDuck(true);
                 }
@@ -466,14 +473,10 @@
         },
 
 
-        /**
-         * Process key up.
-         * @param {Event} e
-         */
+
         onUpPress: function (e) {
             var keyCode = String(e.keyCode);
             var isjumpKey = Nomad.keyActions.JUMP[keyCode] ||
-                e.type == Nomad.events.TOUCHEND ||
                 e.type == Nomad.events.MOUSEDOWN;
 
             if (this.isRunning() && isjumpKey) {
@@ -482,7 +485,6 @@
                 this.boy.speedDrop = false;
                 this.boy.setDuck(false);
             } else if (this.crashed) {
-                // Check that enough time has elapsed before allowing jump key to restart.
                 var deltaTime = getCurrTime() - this.time;
 
                 if (Nomad.keyActions.RESTART[keyCode] || this.isLeftClickOnCanvas(e) ||
@@ -497,20 +499,14 @@
             }
         },
 
-        /**
-         * Returns whether the event was a left click on canvas.
-         * On Windows right click is registered as a click.
-         * @param {Event} e
-         * @return {boolean}
-         */
+
         isLeftClickOnCanvas: function (e) {
             return e.button != null && e.button < 2 &&
                 e.type == Nomad.events.MOUSEUP && e.target == this.canvas;
         },
 
-        /**
-         * RequestAnimationFrame wrapper.
-         */
+        
+
         schedUpdate: function () {
             if (!this.updatePending) {
                 this.updatePending = true;
@@ -518,20 +514,16 @@
             }
         },
 
-        /**
-         * Whether the game is running.
-         * @return {boolean}
-         */
+        
+
         isRunning: function () {
             return !!this.raqId;
         },
 
-        /**
-         * Game over state.
-         */
+
         gameOver: function () {
             this.playSound(this.soundFx.HIT);
-            //vibrate(200);
+         
 
             this.stop();
             this.crashed = true;
@@ -539,7 +531,6 @@
 
             this.boy.update(100, Boy.status.CRASHED);
 
-            // Game over panel.
             if (!this.GameOverScreen) {
                 this.GameOverScreen = new GameOverScreen(this.canvas,
                     this.spriteDef.TEXT_SPRITE, this.spriteDef.RESTART,
@@ -548,13 +539,11 @@
                 this.GameOverScreen.draw();
             }
 
-            // Update the high score.
             if (this.distanceRan > this.hiScore) {
                 this.hiScore = Math.ceil(this.distanceRan);
                 this.distanceMeasure.setHighScore(this.hiScore);
             }
 
-            // Reset the time clock.
             this.time = getCurrTime();
         },
 
@@ -595,9 +584,8 @@
             }
         },
 
-        /**
-         * Pause the game if the tab is not in focus.
-         */
+        
+
         onVisibilityChange: function (e) {
             if (document.hidden || document.webkitHidden || e.type == 'blur' ||
                 document.visibilityState != 'visible') {
@@ -608,10 +596,7 @@
             }
         },
 
-        /**
-         * Play a sound.
-         * @param {SoundBuffer} soundBuffer
-         */
+      
         playSound: function (soundBuffer) {
             if (soundBuffer) {
                 var sourceNode = this.audio_context.createBufferSource();
@@ -621,10 +606,7 @@
             }
         },
 
-        /**
-         * Inverts the current page / canvas colors.
-         * @param {boolean} Whether to reset colors.
-         */
+    
         invert: function (reset) {
             if (reset) {
                 document.body.classList.toggle(Nomad.classes.INVERTED, false);
@@ -638,25 +620,14 @@
     };
 
 
-    /**
-     * Updates the canvas size taking into
-     * account the backing store pixel ratio and
-     * the device pixel ratio.
-     *
-     * @param {HTMLCanvasElement} canvas
-     * @param {number} opt_width
-     * @param {number} opt_height
-     * @return {boolean} Whether the canvas was scaled.
-     */
     Nomad.updateScreenScaling = function (canvas, opt_width, opt_height) {
         var context = canvas.getContext('2d');
 
-        // Query the various pixel ratios
         var devicePixelRatio = Math.floor(window.devicePixelRatio) || 1;
         var backingStoreRatio = Math.floor(context.webkitBackingStorePixelRatio) || 1;
         var ratio = devicePixelRatio / backingStoreRatio;
 
-        // Upscale the canvas if the two ratios don't match
+ 
         if (devicePixelRatio !== backingStoreRatio) {
             var oldWidth = opt_width || canvas.width;
             var oldHeight = opt_height || canvas.height;
@@ -667,13 +638,11 @@
             canvas.style.width = oldWidth + 'px';
             canvas.style.height = oldHeight + 'px';
 
-            // Scale the context to counter the fact that we've manually scaled
-            // our canvas element.
+        
             context.scale(ratio, ratio);
             return true;
         } else if (devicePixelRatio == 1) {
-            // Reset the canvas width / height. Fixes scaling bug when the page is
-            // zoomed and the devicePixelRatio changes accordingly.
+       
             canvas.style.width = canvas.width + 'px';
             canvas.style.height = canvas.height + 'px';
         }
@@ -681,24 +650,12 @@
     };
 
 
-    /**
-     * Get random number.
-     * @param {number} min
-     * @param {number} max
-     * @param {number}
-     */
+
     function randomNumGen(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    /**
-     * Create canvas element.
-     * @param {HTMLElement} container Element to append canvas to.
-     * @param {number} width
-     * @param {number} height
-     * @param {string} opt_classname
-     * @return {HTMLCanvasElement}
-     */
+
     function createCanvas(container, width, height, opt_classname) {
         var canvas = document.createElement('canvas');
         canvas.className = opt_classname ? Nomad.classes.CANVAS + ' ' +
@@ -711,10 +668,7 @@
     }
 
 
-    /**
-     * Decodes the base 64 audio to ArrayBuffer used by Web Audio.
-     * @param {string} base64String
-     */
+  
     function audioToArrayBuffer(base64String) {
         var len = (base64String.length / 4) * 3;
         var str = atob(base64String);
@@ -727,27 +681,12 @@
         return bytes.buffer;
     }
 
-
-    /**
-     * Return the current timestamp.
-     * @return {number}
-     */
     function getCurrTime() {
         return performance.now();
     }
 
 
-    //******************************************************************************
-
-
-    /**
-     * Game over panel.
-     * @param {!HTMLCanvasElement} canvas
-     * @param {Object} textImgPos
-     * @param {Object} restartImgPos
-     * @param {!Object} defaultSizes Canvas defaultSizes.
-     * @constructor
-     */
+   
     function GameOverScreen(canvas, textImgPos, restartImgPos, defaultSizes) {
         this.canvas = canvas;
         this.canvasContainer = canvas.getContext('2d');
@@ -758,10 +697,6 @@
     };
 
 
-    /**
-     * Dimensions used in the panel.
-     * @enum {number}
-     */
     GameOverScreen.defaultSizes = {
         TEXT_X: 0,
         TEXT_Y: 13,
@@ -773,11 +708,7 @@
 
 
     GameOverScreen.prototype = {
-        /**
-         * Update the panel defaultSizes.
-         * @param {number} width New canvas width.
-         * @param {number} opt_height Optional new canvas height.
-         */
+     
         updateDimensions: function (width, opt_height) {
             this.canvasDimensions.WIDTH = width;
             if (opt_height) {
@@ -785,72 +716,58 @@
             }
         },
 
-        /**
-         * Draw the panel.
-         */
+      
         draw: function () {
             var defaultSizes = GameOverScreen.defaultSizes;
 
             var centerX = this.canvasDimensions.WIDTH / 2;
 
-            // Game over text.
-            var textSourceX = defaultSizes.TEXT_X;
-            var textSourceY = defaultSizes.TEXT_Y;
-            var textSourceWidth = defaultSizes.TEXT_WIDTH;
-            var textSourceHeight = defaultSizes.TEXT_HEIGHT;
+         
+            var textSrcX = defaultSizes.TEXT_X;
+            var textSrcY = defaultSizes.TEXT_Y;
+            var textSrcWidth = defaultSizes.TEXT_WIDTH;
+            var textSrcHeight = defaultSizes.TEXT_HEIGHT;
 
-            var textTargetX = Math.round(centerX - (defaultSizes.TEXT_WIDTH / 2));
-            var textTargetY = Math.round((this.canvasDimensions.HEIGHT - 25) / 3);
-            var textTargetWidth = defaultSizes.TEXT_WIDTH;
-            var textTargetHeight = defaultSizes.TEXT_HEIGHT;
+            var xTextTarget = Math.round(centerX - (defaultSizes.TEXT_WIDTH / 2));
+            var yTextTarget = Math.round((this.canvasDimensions.HEIGHT - 25) / 3);
+            var textWidth = defaultSizes.TEXT_WIDTH;
+            var textHeight = defaultSizes.TEXT_HEIGHT;
 
-            var restartSourceWidth = defaultSizes.RESTART_WIDTH;
-            var restartSourceHeight = defaultSizes.RESTART_HEIGHT;
-            var restartTargetX = centerX - (defaultSizes.RESTART_WIDTH / 2);
-            var restartTargetY = this.canvasDimensions.HEIGHT / 2;
+            var restartSrcWidth = defaultSizes.RESTART_WIDTH;
+            var restartSrcHeight = defaultSizes.RESTART_HEIGHT;
+            var xRestartTarget = centerX - (defaultSizes.RESTART_WIDTH / 2);
+            var yRestartTarget = this.canvasDimensions.HEIGHT / 2;
 
             if (IS_HIDPI) {
-                textSourceY *= 2;
-                textSourceX *= 2;
-                textSourceWidth *= 2;
-                textSourceHeight *= 2;
-                restartSourceWidth *= 2;
-                restartSourceHeight *= 2;
+                textSrcY *= 2;
+                textSrcX *= 2;
+                textSrcWidth *= 2;
+                textSrcHeight *= 2;
+                restartSrcWidth *= 2;
+                restartSrcHeight *= 2;
             }
 
-            textSourceX += this.textImgPos.x;
-            textSourceY += this.textImgPos.y;
+            textSrcX += this.textImgPos.x;
+            textSrcY += this.textImgPos.y;
 
-            // Game over text from sprite.
-            this.canvasContainer.drawImage(Nomad.imageSprite,
-                textSourceX, textSourceY, textSourceWidth, textSourceHeight,
-                textTargetX, textTargetY, textTargetWidth, textTargetHeight);
+     
+            this.canvasContainer.drawImage(Nomad.imgSprite,
+                textSrcX, textSrcY, textSrcWidth, textSrcHeight,
+                xTextTarget, yTextTarget, textWidth, textHeight);
 
-            // Restart button.
-            this.canvasContainer.drawImage(Nomad.imageSprite,
+     
+            this.canvasContainer.drawImage(Nomad.imgSprite,
                 this.restartImgPos.x, this.restartImgPos.y,
-                restartSourceWidth, restartSourceHeight,
-                restartTargetX, restartTargetY, defaultSizes.RESTART_WIDTH,
+                restartSrcWidth, restartSrcHeight,
+                xRestartTarget, yRestartTarget, defaultSizes.RESTART_WIDTH,
                 defaultSizes.RESTART_HEIGHT);
         }
     };
 
 
-    //******************************************************************************
-
-    /**
-     * Check for a collision.
-     * @param {!Block} Block
-     * @param {!Boy} boy T-rex object.
-     * @param {HTMLCanvasContext} opt_canvasCtx Optional canvas context for drawing
-     *    collision boxes.
-     * @return {Array<CollisionBox>}
-     */
     function checkForHit(Block, boy, opt_canvasCtx) {
         var BlockBoxXPos = Nomad.defaultSizes.WIDTH + Block.xPos;
 
-        // Adjustments are made to the bounding box as there is a 1 pixel white
-        // border around the t-rex and Blocks.
         var rBoyBox = new HitBox(
             boy.xPos + 1,
             boy.yPos + 1,
@@ -860,31 +777,29 @@
         var BlockBox = new HitBox(
             Block.xPos + 1,
             Block.yPos + 1,
-            Block.typeConfig.width * Block.size - 2,
-            Block.typeConfig.height - 2);
+            Block.type_Config.width * Block.size - 2,
+            Block.type_Config.height - 2);
 
-        // Debug outer box
+     
         if (opt_canvasCtx) {
             drawHitBox(opt_canvasCtx, rBoyBox, BlockBox);
         }
 
-        // Simple outer bounds check.
         if (boxCompare(rBoyBox, BlockBox)) {
-            var collisionBoxes = Block.collisionBoxes;
-            var rBoyCollisionBoxes = boy.ducking ?
-                Boy.collisionBoxes.DUCKING : Boy.collisionBoxes.RUNNING;
+            var collision_boxes = Block.collision_boxes;
+            var rBoyCollisionBoxes = boy.isDuck ?
+                Boy.collision_boxes.DUCKING : Boy.collision_boxes.RUNNING;
 
-            // Detailed axis aligned box check.
+   
             for (var t = 0; t < rBoyCollisionBoxes.length; t++) {
-                for (var i = 0; i < collisionBoxes.length; i++) {
-                    // Adjust the box to actual positions.
+                for (var i = 0; i < collision_boxes.length; i++) {
+                 
                     var adj_BoyBox =
                         adjustHitBox(rBoyCollisionBoxes[t], rBoyBox);
                     var adjBlockBox =
-                        adjustHitBox(collisionBoxes[i], BlockBox);
+                        adjustHitBox(collision_boxes[i], BlockBox);
                     var crashed = boxCompare(adj_BoyBox, adjBlockBox);
 
-                    // Draw boxes for debug.
                     if (opt_canvasCtx) {
                         drawHitBox(opt_canvasCtx, adj_BoyBox, adjBlockBox);
                     }
@@ -899,12 +814,6 @@
     };
 
 
-    /**
-     * Adjust the collision box.
-     * @param {!CollisionBox} box The original box.
-     * @param {!CollisionBox} adjustment Adjustment box.
-     * @return {CollisionBox} The adjusted collision box object.
-     */
     function adjustHitBox(box, adjustment) {
         return new HitBox(
             box.x + adjustment.x,
@@ -914,9 +823,6 @@
     };
 
 
-    /**
-     * Draw the collision boxes for debug.
-     */
     function drawHitBox(canvasContainer, rBoyBox, BlockBox) {
         canvasContainer.save();
         canvasContainer.strokeStyle = '#f00';
@@ -929,12 +835,6 @@
     };
 
 
-    /**
-     * Compare two collision boxes for a collision.
-     * @param {CollisionBox} rBoyBox
-     * @param {CollisionBox} BlockBox
-     * @return {boolean} Whether the boxes intersected.
-     */
     function boxCompare(rBoyBox, BlockBox) {
         var crashed = false;
         var rBoyBoxX = rBoyBox.x;
@@ -943,7 +843,7 @@
         var BlockBoxX = BlockBox.x;
         var BlockBoxY = BlockBox.y;
 
-        // Axis-Aligned Bounding Box method.
+
         if (rBoyBox.x < BlockBoxX + BlockBox.width &&
             rBoyBox.x + rBoyBox.width > BlockBoxX &&
             rBoyBox.y < BlockBox.y + BlockBox.height &&
@@ -954,16 +854,6 @@
         return crashed;
     };
 
-
-    //******************************************************************************
-
-    /**
-     * Collision box object.
-     * @param {number} x X position.
-     * @param {number} y Y Position.
-     * @param {number} w Width.
-     * @param {number} h Height.
-     */
     function HitBox(x, y, w, h) {
         this.x = x;
         this.y = y;
@@ -972,149 +862,108 @@
     };
 
 
-    //******************************************************************************
-
-    /**
-     * Block.
-     * @param {HTMLCanvasCtx} canvasContainer
-     * @param {Block.type} type
-     * @param {Object} spritePos Block position in sprite.
-     * @param {Object} defaultSizes
-     * @param {number} gapCoefficient Mutipler in determining the gap.
-     * @param {number} speed
-     * @param {number} opt_xOffset
-     */
     function Block(canvasContainer, type, spriteImgPos, defaultSizes,
         gapCoefficient, speed, opt_xOffset) {
 
         this.canvasContainer = canvasContainer;
         this.spritePos = spriteImgPos;
-        this.typeConfig = type;
+        this.type_Config = type;
         this.gapCoefficient = gapCoefficient;
-        this.size = randomNumGen(1, Block.MAX_BLOCK_LENGTH);
+        this.size = randomNumGen(1, Block.MAX_Box_LENGTH);
         this.defaultSizes = defaultSizes;
         this.remove = false;
         this.xPos = defaultSizes.WIDTH + (opt_xOffset || 0);
         this.yPos = 0;
         this.width = 0;
-        this.collisionBoxes = [];
+        this.collision_boxes = [];
         this.gap = 0;
-        this.speedOffset = 0;
+        this.speed_Offset = 0;
 
-        // For animated Blocks.
+    
         this.currentFrame = 0;
         this.timer = 0;
 
         this.init(speed);
     };
-
-    /**
-     * Coefficient for calculating the maximum gap.
-     * @const
-     */
-    Block.MAX_GAP_COEFFICIENT = 1.5;
-
-    /**
-     * Maximum Block grouping count.
-     * @const
-     */
-    Block.MAX_BLOCK_LENGTH = 3,
+    Block.MAX_GAP_FACTOR = 1.5;
+    Block.MAX_Box_LENGTH = 3,
 
 
         Block.prototype = {
-            /**
-             * Initialise the DOM for the Block.
-             * @param {number} speed
-             */
+          
             init: function (speed) {
                 this.cloneHitBoxes();
 
-                // Only allow sizing if we're at the right speed.
-                if (this.size > 1 && this.typeConfig.multipleSpeed > speed) {
+
+                if (this.size > 1 && this.type_Config.multipleSpeed > speed) {
                     this.size = 1;
                 }
 
-                this.width = this.typeConfig.width * this.size;
+                this.width = this.type_Config.width * this.size;
 
-                // Check if Block can be positioned at various heights.
-                if (Array.isArray(this.typeConfig.yPos)) {
-                    var yPosConfig = this.typeConfig.yPos;
+        
+                if (Array.isArray(this.type_Config.yPos)) {
+                    var yPosConfig = this.type_Config.yPos;
                     this.yPos = yPosConfig[randomNumGen(0, yPosConfig.length - 1)];
                 } else {
-                    this.yPos = this.typeConfig.yPos;
+                    this.yPos = this.type_Config.yPos;
                 }
 
                 this.draw();
-
-                // Make collision box adjustments,
-                // Central box is adjusted to the size as one box.
-                //      ____        ______        ________
-                //    _|   |-|    _|     |-|    _|       |-|
-                //   | |<->| |   | |<--->| |   | |<----->| |
-                //   | | 1 | |   | |  2  | |   | |   3   | |
-                //   |_|___|_|   |_|_____|_|   |_|_______|_|
-                //
                 if (this.size > 1) {
-                    this.collisionBoxes[1].width = this.width - this.collisionBoxes[0].width -
-                        this.collisionBoxes[2].width;
-                    this.collisionBoxes[2].x = this.width - this.collisionBoxes[2].width;
+                    this.collision_boxes[1].width = this.width - this.collision_boxes[0].width -
+                        this.collision_boxes[2].width;
+                    this.collision_boxes[2].x = this.width - this.collision_boxes[2].width;
                 }
 
-                // For Blocks that go at a different speed from the horizon.
-                if (this.typeConfig.speedOffset) {
-                    this.speedOffset = Math.random() > 0.5 ? this.typeConfig.speedOffset :
-                        -this.typeConfig.speedOffset;
+     
+                if (this.type_Config.speed_Offset) {
+                    this.speed_Offset = Math.random() > 0.5 ? this.type_Config.speed_Offset :
+                        -this.type_Config.speed_Offset;
                 }
 
                 this.gap = this.getGap(this.gapCoefficient, speed);
             },
 
-            /**
-             * Draw and crop based on size.
-             */
+      
             draw: function () {
-                var sourceWidth = this.typeConfig.width;
-                var sourceHeight = this.typeConfig.height;
+                var srcWidth = this.type_Config.width;
+                var srcHeight = this.type_Config.height;
 
                 if (IS_HIDPI) {
-                    sourceWidth = sourceWidth * 2;
-                    sourceHeight = sourceHeight * 2;
+                    srcWidth = srcWidth * 2;
+                    srcHeight = srcHeight * 2;
                 }
 
-                // X position in sprite.
-                var sourceX = (sourceWidth * this.size) * (0.5 * (this.size - 1)) +
+   
+                var srcX = (srcWidth * this.size) * (0.5 * (this.size - 1)) +
                     this.spritePos.x;
 
-                // Animation frames.
+           
                 if (this.currentFrame > 0) {
-                    sourceX += sourceWidth * this.currentFrame;
+                    srcX += srcWidth * this.currentFrame;
                 }
 
-                this.canvasContainer.drawImage(Nomad.imageSprite,
-                    sourceX, this.spritePos.y,
-                    sourceWidth * this.size, sourceHeight,
+                this.canvasContainer.drawImage(Nomad.imgSprite,
+                    srcX, this.spritePos.y,
+                    srcWidth * this.size, srcHeight,
                     this.xPos, this.yPos,
-                    this.typeConfig.width * this.size, this.typeConfig.height);
+                    this.type_Config.width * this.size, this.type_Config.height);
             },
 
-            /**
-             * Block frame update.
-             * @param {number} deltaTime
-             * @param {number} speed
-             */
+         
             update: function (deltaTime, speed) {
                 if (!this.remove) {
-                    if (this.typeConfig.speedOffset) {
-                        speed += this.speedOffset;
+                    if (this.type_Config.speed_Offset) {
+                        speed += this.speed_Offset;
                     }
                     this.xPos -= Math.floor((speed * FPS / 1000) * deltaTime);
 
-                    // Update frame
-                    if (this.typeConfig.numFrames) {
+                    if (this.type_Config.numFrames) {
                         this.timer += deltaTime;
-                        if (this.timer >= this.typeConfig.frameRate) {
+                        if (this.timer >= this.type_Config.frameRate) {
                             this.currentFrame =
-                                this.currentFrame == this.typeConfig.numFrames - 1 ?
+                                this.currentFrame == this.type_Config.numFrames - 1 ?
                                     0 : this.currentFrame + 1;
                             this.timer = 0;
                         }
@@ -1127,89 +976,70 @@
                 }
             },
 
-            /**
-             * Calculate a random gap size.
-             * - Minimum gap gets wider as speed increses
-             * @param {number} gapCoefficient
-             * @param {number} speed
-             * @return {number} The gap size.
-             */
+          
             getGap: function (gapCoefficient, speed) {
                 var minGap = Math.round(this.width * speed +
-                    this.typeConfig.minGap * gapCoefficient);
-                var maxGap = Math.round(minGap * Block.MAX_GAP_COEFFICIENT);
+                    this.type_Config.minGap * gapCoefficient);
+                var maxGap = Math.round(minGap * Block.MAX_GAP_FACTOR);
                 return randomNumGen(minGap, maxGap);
             },
 
-            /**
-             * Check if Block is visible.
-             * @return {boolean} Whether the Block is in the game area.
-             */
             isVisible: function () {
                 return this.xPos + this.width > 0;
             },
 
-            /**
-             * Make a copy of the collision boxes, since these will change based on
-             * Block type and size.
-             */
+         
             cloneHitBoxes: function () {
-                var collisionBoxes = this.typeConfig.collisionBoxes;
+                var collision_boxes = this.type_Config.collision_boxes;
 
-                for (var i = collisionBoxes.length - 1; i >= 0; i--) {
-                    this.collisionBoxes[i] = new HitBox(collisionBoxes[i].x,
-                        collisionBoxes[i].y, collisionBoxes[i].width,
-                        collisionBoxes[i].height);
+                for (var i = collision_boxes.length - 1; i >= 0; i--) {
+                    this.collision_boxes[i] = new HitBox(collision_boxes[i].x,
+                        collision_boxes[i].y, collision_boxes[i].width,
+                        collision_boxes[i].height);
                 }
             }
         };
 
 
-    /**
-     * Block definitions.
-     * minGap: minimum pixel space betweeen Blocks.
-     * multipleSpeed: Speed at which multiples are allowed.
-     * speedOffset: speed faster / slower than the horizon.
-     * minSpeed: Minimum speed which the Block can make an appearance.
-     */
+  
     Block.types = [
         {
-            type: 'OBSTACLE_SMALL',
+            type: 'BLOCK_SMALL',
             width: 17,
             height: 35,
             yPos: 105,
             multipleSpeed: 4,
             minGap: 120,
             minSpeed: 0,
-            collisionBoxes: [
+            collision_boxes: [
                 new HitBox(0, 7, 5, 27),
                 new HitBox(4, 0, 6, 34),
                 new HitBox(10, 4, 7, 14)
             ]
         },
         {
-            type: 'OBSTACLE_LARGE',
+            type: 'BLOCK_LARGE',
             width: 25,
             height: 50,
             yPos: 90,
             multipleSpeed: 7,
             minGap: 120,
             minSpeed: 0,
-            collisionBoxes: [
+            collision_boxes: [
                 new HitBox(0, 12, 7, 38),
                 new HitBox(8, 0, 7, 49),
                 new HitBox(13, 10, 10, 38)
             ]
         },
         {
-            type: 'BIRD',
+            type: 'DUCK',
             width: 46,
             height: 40,
-            yPos: [100, 75, 50], // Variable height.
+            yPos: [100, 75, 50], 
             multipleSpeed: 999,
             minSpeed: 8.5,
             minGap: 150,
-            collisionBoxes: [
+            collision_boxes: [
                 new HitBox(15, 15, 16, 5),
                 new HitBox(18, 21, 24, 6),
                 new HitBox(2, 14, 4, 3),
@@ -1218,25 +1048,18 @@
             ],
             numFrames: 2,
             frameRate: 1000 / 6,
-            speedOffset: .8
+            speed_Offset: .8
         }
     ];
 
 
-    //******************************************************************************
-    /**
-     * Nomad Boy game character.
-     * @param {HTMLCanvas} canvas
-     * @param {Object} spritePos Positioning within image sprite.
-     * @constructor
-     */
+    
     function Boy(canvas, spritePos) {
         this.canvas = canvas;
         this.canvasContainer = canvas.getContext('2d');
         this.spritePos = spritePos;
         this.xPos = 0;
         this.yPos = 0;
-        // Position when on the ground.
         this.groundYPos = 0;
         this.currentFrame = 0;
         this.currentAnimFrames = [];
@@ -1244,33 +1067,28 @@
         this.blinkCount = 0;
         this.animStartTime = 0;
         this.timer = 0;
-        this.msPerFrame = 1000 / FPS;
+        this.secPerFrame = 1000 / FPS;
         this.values = Boy.values;
-        // Current status.
         this.status = Boy.status.WAITING;
-
-        this.jumping = false;
-        this.ducking = false;
-        this.jumpVelocity = 0;
-        this.reachedMinHeight = false;
+        this.isJump = false;
+        this.isDuck = false;
+        this.jumpSpeed = 0;
+        this.hasReachedMinHeight = false;
         this.speedDrop = false;
-        this.jumpCount = 0;
-        this.jumpspotX = 0;
+        this.jumpCtr = 0;
+        this.jump_coordinateX = 0;
 
         this.init();
     };
 
 
-    /**
-     * Nomad Boy player config.
-     * @enum {number}
-     */
+  
     Boy.values = {
-        DROP_VELOCITY: -5,
+        DROP_SPEED: -5,
         GRAVITY: 0.6,
         HEIGHT: 47,
         HEIGHT_DUCK: 25,
-        INIITAL_JUMP_VELOCITY: -10,
+        INIITAL_JUMP_SPEED: -10,
         INTRO_DURATION: 1500,
         MAX_JUMP_HEIGHT: 30,
         MIN_JUMP_HEIGHT: 30,
@@ -1282,11 +1100,8 @@
     };
 
 
-    /**
-     * Used in collision detection.
-     * @type {Array<CollisionBox>}
-     */
-    Boy.collisionBoxes = {
+
+    Boy.collision_boxes = {
         DUCKING: [
             new HitBox(1, 18, 55, 25)
         ],
@@ -1301,10 +1116,7 @@
     };
 
 
-    /**
-     * Animation states.
-     * @enum {string}
-     */
+   
     Boy.status = {
         CRASHED: 'CRASHED',
         DUCKING: 'DUCKING',
@@ -1313,45 +1125,36 @@
         WAITING: 'WAITING'
     };
 
-    /**
-     * Blinking coefficient.
-     * @const
-     */
+
     Boy.BLINK_TIMING = 7000;
 
-    /**
-     * Animation config for different states.
-     * @enum {Object}
-     */
+ 
     Boy.animFrames = {
         WAITING: {
             frames: [44, 0],
-            msPerFrame: 1000 / 3
+            secPerFrame: 1000 / 3
         },
         RUNNING: {
             frames: [88, 132],
-            msPerFrame: 1000 / 12
+            secPerFrame: 1000 / 12
         },
         CRASHED: {
             frames: [220],
-            msPerFrame: 1000 / 60
+            secPerFrame: 1000 / 60
         },
         JUMPING: {
             frames: [0],
-            msPerFrame: 1000 / 60
+            secPerFrame: 1000 / 60
         },
         DUCKING: {
             frames: [262, 321],
-            msPerFrame: 1000 / 8
+            secPerFrame: 1000 / 8
         }
     };
 
 
     Boy.prototype = {
-        /**
-         * Nomad Boy player initaliser.
-         * Sets the t-rex to blink at random intervals.
-         */
+      
         init: function () {
             this.groundYPos = Nomad.defaultSizes.HEIGHT - this.values.HEIGHT -
                 Nomad.values.BOTTOM_PAD;
@@ -1362,37 +1165,30 @@
             this.update(0, Boy.status.WAITING);
         },
 
-        /**
-         * Setter for the jump velocity.
-         * The approriate drop velocity is also set.
-         */
+      
         setJumpSpeed: function (setting) {
-            this.values.INIITAL_JUMP_VELOCITY = -setting;
-            this.values.DROP_VELOCITY = -setting / 2;
+            this.values.INIITAL_JUMP_SPEED = -setting;
+            this.values.DROP_SPEED = -setting / 2;
         },
 
-        /**
-         * Set the animation status.
-         * @param {!number} deltaTime
-         * @param {Boy.status} status Optional status to switch to.
-         */
+  
         update: function (deltaTime, opt_status) {
             this.timer += deltaTime;
 
-            // Update the status.
+     
             if (opt_status) {
                 this.status = opt_status;
                 this.currentFrame = 0;
-                this.msPerFrame = Boy.animFrames[opt_status].msPerFrame;
+                this.secPerFrame = Boy.animFrames[opt_status].secPerFrame;
                 this.currentAnimFrames = Boy.animFrames[opt_status].frames;
 
                 if (opt_status == Boy.status.WAITING) {
                     this.animStartTime = getCurrTime();
-                    this.setBlinking();
+                    this.setBlink();
                 }
             }
 
-            // Game intro animation, T-rex moves in from the left.
+   
             if (this.intro && this.xPos < this.values.START_X_POS) {
                 this.xPos += Math.round((this.values.START_X_POS /
                     this.values.INTRO_DURATION) * deltaTime);
@@ -1404,73 +1200,63 @@
                 this.draw(this.currentAnimFrames[this.currentFrame], 0);
             }
 
-            // Update the frame position.
-            if (this.timer >= this.msPerFrame) {
+
+            if (this.timer >= this.secPerFrame) {
                 this.currentFrame = this.currentFrame ==
                     this.currentAnimFrames.length - 1 ? 0 : this.currentFrame + 1;
                 this.timer = 0;
             }
 
-            // Speed drop becomes duck if the down key is still being pressed.
+
             if (this.speedDrop && this.yPos == this.groundYPos) {
                 this.speedDrop = false;
                 this.setDuck(true);
             }
         },
 
-        /**
-         * Draw the nomad to a particular position.
-         * @param {number} x
-         * @param {number} y
-         */
+ 
         draw: function (x, y) {
-            var sourceX = x;
-            var sourceY = y;
-            var sourceWidth = this.ducking && this.status != Boy.status.CRASHED ?
+            var srcX = x;
+            var srcY = y;
+            var srcWidth = this.isDuck && this.status != Boy.status.CRASHED ?
                 this.values.WIDTH_DUCK : this.values.WIDTH;
-            var sourceHeight = this.values.HEIGHT;
+            var srcHeight = this.values.HEIGHT;
 
             if (IS_HIDPI) {
-                sourceX *= 2;
-                sourceY *= 2;
-                sourceWidth *= 2;
-                sourceHeight *= 2;
+                srcX *= 2;
+                srcY *= 2;
+                srcWidth *= 2;
+                srcHeight *= 2;
             }
 
-            // Adjustments for sprite sheet position.
-            sourceX += this.spritePos.x;
-            sourceY += this.spritePos.y;
+            srcX += this.spritePos.x;
+            srcY += this.spritePos.y;
 
-            // Ducking.
-            if (this.ducking && this.status != Boy.status.CRASHED) {
-                this.canvasContainer.drawImage(Nomad.imageSprite, sourceX, sourceY,
-                    sourceWidth, sourceHeight,
+  
+            if (this.isDuck && this.status != Boy.status.CRASHED) {
+                this.canvasContainer.drawImage(Nomad.imgSprite, srcX, srcY,
+                    srcWidth, srcHeight,
                     this.xPos, this.yPos,
                     this.values.WIDTH_DUCK, this.values.HEIGHT);
             } else {
-                // Crashed whilst ducking. Boy is standing up so needs adjustment.
-                if (this.ducking && this.status == Boy.status.CRASHED) {
+             
+                if (this.isDuck && this.status == Boy.status.CRASHED) {
                     this.xPos++;
                 }
-                // Standing / running
-                this.canvasContainer.drawImage(Nomad.imageSprite, sourceX, sourceY,
-                    sourceWidth, sourceHeight,
+   
+                this.canvasContainer.drawImage(Nomad.imgSprite, srcX, srcY,
+                    srcWidth, srcHeight,
                     this.xPos, this.yPos,
                     this.values.WIDTH, this.values.HEIGHT);
             }
         },
 
-        /**
-         * Sets a random time for the blink to happen.
-         */
-        setBlinking: function () {
+       
+        setBlink: function () {
             this.blinkDelay = Math.ceil(Math.random() * Boy.BLINK_TIMING);
         },
 
-        /**
-         * Make t-rex blink at random intervals.
-         * @param {number} time Current time in milliseconds.
-         */
+      
         blink: function (time) {
             var deltaTime = time - this.animStartTime;
 
@@ -1478,110 +1264,93 @@
                 this.draw(this.currentAnimFrames[this.currentFrame], 0);
 
                 if (this.currentFrame == 1) {
-                    // Set new random delay to blink.
-                    this.setBlinking();
+          
+                    this.setBlink();
                     this.animStartTime = time;
                     this.blinkCount++;
                 }
             }
         },
 
-        /**
-         * Initialise a jump.
-         * @param {number} speed
-         */
+      
         startJump: function (speed) {
-            if (!this.jumping) {
+            if (!this.isJump) {
                 this.update(0, Boy.status.JUMPING);
-                // Tweak the jump velocity based on the speed.
-                this.jumpVelocity = this.values.INIITAL_JUMP_VELOCITY - (speed / 10);
-                this.jumping = true;
-                this.reachedMinHeight = false;
+            
+                this.jumpSpeed = this.values.INIITAL_JUMP_SPEED - (speed / 10);
+                this.isJump = true;
+                this.hasReachedMinHeight = false;
                 this.speedDrop = false;
             }
         },
 
-        /**
-         * Jump is complete, falling down.
-         */
         endJump: function () {
-            if (this.reachedMinHeight &&
-                this.jumpVelocity < this.values.DROP_VELOCITY) {
-                this.jumpVelocity = this.values.DROP_VELOCITY;
+            if (this.hasReachedMinHeight &&
+                this.jumpSpeed < this.values.DROP_SPEED) {
+                this.jumpSpeed = this.values.DROP_SPEED;
             }
         },
 
-        /**
-         * Update frame for a jump.
-         * @param {number} deltaTime
-         * @param {number} speed
-         */
+      
         updateJump: function (deltaTime, speed) {
-            var msPerFrame = Boy.animFrames[this.status].msPerFrame;
-            var framesElapsed = deltaTime / msPerFrame;
+            var secPerFrame = Boy.animFrames[this.status].secPerFrame;
+            var framesElapsed = deltaTime / secPerFrame;
 
-            // Speed drop makes Boy fall faster.
+  
             if (this.speedDrop) {
-                this.yPos += Math.round(this.jumpVelocity *
+                this.yPos += Math.round(this.jumpSpeed *
                     this.values.SPEED_DROP_COEFFICIENT * framesElapsed);
             } else {
-                this.yPos += Math.round(this.jumpVelocity * framesElapsed);
+                this.yPos += Math.round(this.jumpSpeed * framesElapsed);
             }
 
-            this.jumpVelocity += this.values.GRAVITY * framesElapsed;
+            this.jumpSpeed += this.values.GRAVITY * framesElapsed;
 
-            // Minimum height has been reached.
+     
             if (this.yPos < this.minJumpHeight || this.speedDrop) {
-                this.reachedMinHeight = true;
+                this.hasReachedMinHeight = true;
             }
 
-            // Reached max height
+     
             if (this.yPos < this.values.MAX_JUMP_HEIGHT || this.speedDrop) {
                 this.endJump();
             }
 
-            // Back down at ground level. Jump completed.
             if (this.yPos > this.groundYPos) {
                 this.reset();
-                this.jumpCount++;
+                this.jumpCtr++;
             }
 
             this.update(deltaTime);
         },
 
-        /**
-         * Set the speed drop. Immediately cancels the current jump.
-         */
+       
         setDropSpeed: function () {
             this.speedDrop = true;
-            this.jumpVelocity = 1;
+            this.jumpSpeed = 1;
         },
 
-        /**
-         * @param {boolean} isDucking.
-         */
+      
         setDuck: function (isDucking) {
             if (isDucking && this.status != Boy.status.DUCKING) {
                 this.update(0, Boy.status.DUCKING);
-                this.ducking = true;
+                this.isDuck = true;
             } else if (this.status == Boy.status.DUCKING) {
                 this.update(0, Boy.status.RUNNING);
-                this.ducking = false;
+                this.isDuck = false;
             }
         },
 
-        /**
-         * Reset the nomad to running at start of game.
-         */
+      
         reset: function () {
             this.yPos = this.groundYPos;
-            this.jumpVelocity = 0;
-            this.jumping = false;
-            this.ducking = false;
+            this.jumpSpeed = 0;
+            this.isJump = false;
+            this.isDuck = false;
             this.update(0, Boy.status.RUNNING);
             this.midair = false;
             this.speedDrop = false;
-            this.jumpCount = 0;
+            this.jumpCtr = 0;
         }
     };
 
@@ -1590,13 +1359,13 @@
     function distanceCalc(canvas, spritePos, canvasWidth) {
         this.canvas = canvas;
         this.canvasContainer = canvas.getContext('2d');
-        this.image = Nomad.imageSprite;
+        this.image = Nomad.imgSprite;
         this.spritePos = spritePos;
         this.x = 0;
         this.y = 5;
 
-        this.currentDistance = 0;
-        this.maxScore = 0;
+        this.curDistance = 0;
+        this.maximumScore = 0;
         this.highScore = 0;
         this.container = null;
 
@@ -1608,8 +1377,17 @@
         this.invertTrigger = false;
 
         this.values = distanceCalc.values;
-        this.maxScoreUnits = this.values.MAX_DISTANCE_UNITS;
+        this.maximumScoreUnits = this.values.MAX_DISTANCE_UNITS;
         this.init(canvasWidth);
+    };
+
+    distanceCalc.values = {
+       
+        MAX_DISTANCE_UNITS: 5,
+        HI_DIST: 100,
+        DIST_FACTOR: 0.025,
+        FLASHTIME: 1000 / 4,
+        FLASHLOOPS: 3
     };
 
 
@@ -1625,81 +1403,63 @@
     distanceCalc.yPos = [0, 13, 27, 40, 53, 67, 80, 93, 107, 120];
 
 
-    distanceCalc.values = {
-       
-        MAX_DISTANCE_UNITS: 5,
-
-        
-        ACHIEVEMENT_DISTANCE: 100,
-
-       
-        COEFFICIENT: 0.025,
-
-       
-        FLASH_DURATION: 1000 / 4,
-
-        
-        FLASH_ITERATIONS: 3
-    };
-
-
     distanceCalc.prototype = {
 
         init: function (width) {
-            var maxDistanceStr = '';
+            var maximumDistanceStr = '';
 
             this.calculateX(width);
-            this.maxScore = this.maxScoreUnits;
-            for (var i = 0; i < this.maxScoreUnits; i++) {
+            this.maximumScore = this.maximumScoreUnits;
+            for (var i = 0; i < this.maximumScoreUnits; i++) {
                 this.draw(i, 0);
                 this.defaultString += '0';
-                maxDistanceStr += '9';
+                maximumDistanceStr += '9';
             }
 
-            this.maxScore = parseInt(maxDistanceStr);
+            this.maximumScore = parseInt(maximumDistanceStr);
         },
 
    
         calculateX: function (canvasWidth) {
             this.x = canvasWidth - (distanceCalc.defaultSizes.DEST_WIDTH *
-                (this.maxScoreUnits + 1));
+                (this.maximumScoreUnits + 1));
         },
 
 
-        draw: function (digitPos, value, opt_highScore) {
-            var sourceWidth = distanceCalc.defaultSizes.WIDTH;
-            var sourceHeight = distanceCalc.defaultSizes.HEIGHT;
-            var sourceX = distanceCalc.defaultSizes.WIDTH * value;
-            var sourceY = 0;
+        draw: function (digitPos, value, optional_hiScore) {
+            var srcWidth = distanceCalc.defaultSizes.WIDTH;
+            var srcHeight = distanceCalc.defaultSizes.HEIGHT;
+            var srcX = distanceCalc.defaultSizes.WIDTH * value;
+            var srcY = 0;
 
-            var targetX = digitPos * distanceCalc.defaultSizes.DEST_WIDTH;
-            var targetY = this.y;
-            var targetWidth = distanceCalc.defaultSizes.WIDTH;
-            var targetHeight = distanceCalc.defaultSizes.HEIGHT;
+            var xTarget = digitPos * distanceCalc.defaultSizes.DEST_WIDTH;
+            var yTarget = this.y;
+            var distanceWidth = distanceCalc.defaultSizes.WIDTH;
+            var distanceHeight = distanceCalc.defaultSizes.HEIGHT;
 
             if (IS_HIDPI) {
-                sourceWidth *= 2;
-                sourceHeight *= 2;
-                sourceX *= 2;
+                srcWidth *= 2;
+                srcHeight *= 2;
+                srcX *= 2;
             }
 
-            sourceX += this.spritePos.x;
-            sourceY += this.spritePos.y;
+            srcX += this.spritePos.x;
+            srcY += this.spritePos.y;
 
             this.canvasContainer.save();
 
-            if (opt_highScore) {
-                   var highScoreX = this.x - (this.maxScoreUnits * 2) *
+            if (optional_hiScore) {
+                   var highScoreX = this.x - (this.maximumScoreUnits * 2) *
                     distanceCalc.defaultSizes.WIDTH;
                 this.canvasContainer.translate(highScoreX, this.y);
             } else {
                 this.canvasContainer.translate(this.x, this.y);
             }
 
-            this.canvasContainer.drawImage(this.image, sourceX, sourceY,
-                sourceWidth, sourceHeight,
-                targetX, targetY,
-                targetWidth, targetHeight
+            this.canvasContainer.drawImage(this.image, srcX, srcY,
+                srcWidth, srcHeight,
+                xTarget, yTarget,
+                distanceWidth, distanceHeight
             );
 
             this.canvasContainer.restore();
@@ -1707,7 +1467,7 @@
 
 
         getDist: function (distance) {
-            return distance ? Math.round(distance * this.values.COEFFICIENT) : 0;
+            return distance ? Math.round(distance * this.values.DIST_FACTOR) : 0;
         },
 
 
@@ -1718,17 +1478,17 @@
             if (!this.acheivement) {
                 distance = this.getDist(distance);
                 
-                if (distance > this.maxScore && this.maxScoreUnits ==
+                if (distance > this.maximumScore && this.maximumScoreUnits ==
                     this.values.MAX_DISTANCE_UNITS) {
-                    this.maxScoreUnits++;
-                    this.maxScore = parseInt(this.maxScore + '9');
+                    this.maximumScoreUnits++;
+                    this.maximumScore = parseInt(this.maximumScore + '9');
                 } else {
                     this.distance = 0;
                 }
 
                 if (distance > 0) {
                     
-                    if (distance % this.values.ACHIEVEMENT_DISTANCE == 0) {
+                    if (distance % this.values.HI_DIST == 0) {
                         
                         this.acheivement = true;
                         this.flashTimer = 0;
@@ -1737,20 +1497,20 @@
 
                     
                     var distanceStr = (this.defaultString +
-                        distance).substr(-this.maxScoreUnits);
+                        distance).substr(-this.maximumScoreUnits);
                     this.digits = distanceStr.split('');
                 } else {
                     this.digits = this.defaultString.split('');
                 }
             } else {
                 
-                if (this.flashIterations <= this.values.FLASH_ITERATIONS) {
+                if (this.flashIterations <= this.values.FLASHLOOPS) {
                     this.flashTimer += deltaTime;
 
-                    if (this.flashTimer < this.values.FLASH_DURATION) {
+                    if (this.flashTimer < this.values.FLASHTIME) {
                         paint = false;
                     } else if (this.flashTimer >
-                        this.values.FLASH_DURATION * 2) {
+                        this.values.FLASHTIME * 2) {
                         this.flashTimer = 0;
                         this.flashIterations++;
                     }
@@ -1785,7 +1545,7 @@
         setHighScore: function (distance) {
             distance = this.getDist(distance);
             var highScoreStr = (this.defaultString +
-                distance).substr(-this.maxScoreUnits);
+                distance).substr(-this.maximumScoreUnits);
 
             this.highScore = ['10', '11', ''].concat(highScoreStr.split(''));
         },
@@ -1813,8 +1573,6 @@
         this.init();
     };
 
-
-  
     Clouds.values = {
         HEIGHT: 14,
         MAX_CLOUD_GAP: 400,
@@ -1823,7 +1581,6 @@
         MIN_SKY_LEVEL: 71,
         WIDTH: 46
     };
-
 
     Clouds.prototype = {
      
@@ -1835,17 +1592,17 @@
 
         draw: function () {
             this.canvasContainer.save();
-            var sourceWidth = Clouds.values.WIDTH;
-            var sourceHeight = Clouds.values.HEIGHT;
+            var srcWidth = Clouds.values.WIDTH;
+            var srcHeight = Clouds.values.HEIGHT;
 
             if (IS_HIDPI) {
-                sourceWidth = sourceWidth * 2;
-                sourceHeight = sourceHeight * 2;
+                srcWidth = srcWidth * 2;
+                srcHeight = srcHeight * 2;
             }
 
-            this.canvasContainer.drawImage(Nomad.imageSprite, this.spritePos.x,
+            this.canvasContainer.drawImage(Nomad.imgSprite, this.spritePos.x,
                 this.spritePos.y,
-                sourceWidth, sourceHeight,
+                srcWidth, srcHeight,
                 this.xPos, this.yPos,
                 Clouds.values.WIDTH, Clouds.values.HEIGHT);
 
@@ -1920,13 +1677,13 @@
         },
 
         draw: function () {
-            this.canvasContainer.drawImage(Nomad.imageSprite, this.sourceXPos[0],
+            this.canvasContainer.drawImage(Nomad.imgSprite, this.sourceXPos[0],
                 this.spritePos.y,
                 this.sourceDimensions.WIDTH, this.sourceDimensions.HEIGHT,
                 this.xPos[0], this.yPos,
                 this.defaultSizes.WIDTH, this.defaultSizes.HEIGHT);
 
-            this.canvasContainer.drawImage(Nomad.imageSprite, this.sourceXPos[1],
+            this.canvasContainer.drawImage(Nomad.imgSprite, this.sourceXPos[1],
                 this.spritePos.y,
                 this.sourceDimensions.WIDTH, this.sourceDimensions.HEIGHT,
                 this.xPos[1], this.yPos,
@@ -1974,7 +1731,7 @@
         this.Blocks = [];
         this.BlockHistory = [];
         this.horizonOffsets = [0, 0];
-        this.cloudFrequency = this.values.CLOUD_FREQUENCY;
+        this.cloudFreq = this.values.CLOUD_FREQ;
         this.spritePos = spritePos;
         this.clouds = [];
         this.cloudSpeed = this.values.BG_CLOUD_SPEED;
@@ -1986,7 +1743,7 @@
     Space.values = {
         BG_CLOUD_SPEED: 0.2,
         BUMPY_THRESHOLD: .3,
-        CLOUD_FREQUENCY: .5,
+        CLOUD_FREQ: .5,
         HORIZON_HEIGHT: 16,
         MAX_CLOUDS: 6
     };
@@ -1999,30 +1756,30 @@
    
         },
 
-        update: function (deltaTime, currentSpeed, updateBox, showNightMode) {
+        update: function (deltaTime, curSpeed, updateBox, showNightMode) {
             this.runningTime += deltaTime;
-            this.horizonLine.update(deltaTime, currentSpeed);
-            this.updateClouds(deltaTime, currentSpeed);
+            this.horizonLine.update(deltaTime, curSpeed);
+            this.updateClouds(deltaTime, curSpeed);
 
             if (updateBox) {
-                this.updateBox(deltaTime, currentSpeed);
+                this.updateBox(deltaTime, curSpeed);
             }
         },
 
         updateClouds: function (deltaTime, speed) {
             var cloudSpeed = this.cloudSpeed / 1000 * deltaTime * speed;
-            var numClouds = this.clouds.length;
+            var cloudNum = this.clouds.length;
 
-            if (numClouds) {
-                for (var i = numClouds - 1; i >= 0; i--) {
+            if (cloudNum) {
+                for (var i = cloudNum - 1; i >= 0; i--) {
                     this.clouds[i].update(cloudSpeed);
                 }
 
-                var lastCloud = this.clouds[numClouds - 1];
+                var lastCloud = this.clouds[cloudNum - 1];
 
-                if (numClouds < this.values.MAX_CLOUDS &&
+                if (cloudNum < this.values.MAX_CLOUDS &&
                     (this.defaultSizes.WIDTH - lastCloud.xPos) > lastCloud.cloudGap &&
-                    this.cloudFrequency > Math.random()) {
+                    this.cloudFreq > Math.random()) {
                     this.addCloud();
                 }
 
@@ -2034,12 +1791,12 @@
             }
         },
 
-        updateBox: function (deltaTime, currentSpeed) {
+        updateBox: function (deltaTime, curSpeed) {
             var updatedBlocks = this.Blocks.slice(0);
 
             for (var i = 0; i < this.Blocks.length; i++) {
                 var Block = this.Blocks[i];
-                Block.update(deltaTime, currentSpeed);
+                Block.update(deltaTime, curSpeed);
 
                 if (Block.remove) {
                     updatedBlocks.shift();
@@ -2054,11 +1811,11 @@
                     lastBlock.isVisible() &&
                     (lastBlock.xPos + lastBlock.width + lastBlock.gap) <
                     this.defaultSizes.WIDTH) {
-                    this.addBox(currentSpeed);
+                    this.addBox(curSpeed);
                     lastBlock.followingBlockCreated = true;
                 }
             } else {
-                this.addBox(currentSpeed);
+                this.addBox(curSpeed);
             }
         },
 
@@ -2066,19 +1823,19 @@
             this.Blocks.shift();
         },
 
-        addBox: function (currentSpeed) {
+        addBox: function (curSpeed) {
             var BlockTypeIndex = randomNumGen(0, Block.types.length - 1);
             var BlockType = Block.types[BlockTypeIndex];
 
             if (this.checkBox(BlockType.type) ||
-                currentSpeed < BlockType.minSpeed) {
-                this.addBox(currentSpeed);
+                curSpeed < BlockType.minSpeed) {
+                this.addBox(curSpeed);
             } else {
                 var BlockSpritePos = this.spritePos[BlockType.type];
 
                 this.Blocks.push(new Block(this.canvasContainer, BlockType,
                     BlockSpritePos, this.defaultSizes,
-                    this.gapCoefficient, currentSpeed, BlockType.width));
+                    this.gapCoefficient, curSpeed, BlockType.width));
 
                 this.BlockHistory.unshift(BlockType.type);
 
